@@ -160,7 +160,7 @@ router.post(
 );
 
 router.get(
-  "/login/google/callback/:access_token",
+  "/login/email/:access_token",
   authController.LoginEmailAuth.bind(authController)
 );
 

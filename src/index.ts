@@ -49,7 +49,7 @@ app.use("/uploads", express.static("uploads"));
   app.use("/api", authRouter);
   app.use("/api/consultation", consultationRouter);
   app.use("/api/projects", projectRouter);
-  app.use("/api/projects", ProjectCarbonRouter);
+  app.use("/api/project-carbons", ProjectCarbonRouter);
   app.use("/api/carbons", carbon);
   app.use("/api/donation", donateTree);
   app.use("/api/orders", orderRouter);

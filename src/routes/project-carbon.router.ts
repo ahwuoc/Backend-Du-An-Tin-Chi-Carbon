@@ -20,21 +20,21 @@ const projectFileUpload = upload.fields([
   { name: "kmlFile", maxCount: 1 },
 ]);
 router.post(
-  "/carbon",
+  "/",
   projectFileUpload,
   ProjectCarbonController.createProjectCarbon
 );
 
-router.get("/carbon", ProjectCarbonController.getAllProjectCarbons);
+router.get("/", ProjectCarbonController.getAllProjectCarbons);
+router.get("/:id", ProjectCarbonController.getProjectCarbonById);
 
-router.get("/carbon/:id", ProjectCarbonController.getProjectCarbonById);
 
 router.put(
-  "/carbon/:id",
+  "/:id",
   projectFileUpload,
   ProjectCarbonController.updateProjectCarbon
 );
 
-router.delete("/carbon/:id", ProjectCarbonController.deleteProjectCarbon);
+router.delete("/:id", ProjectCarbonController.deleteProjectCarbon);
 
 export default router;
