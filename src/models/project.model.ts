@@ -69,7 +69,7 @@ const ProjectSchema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const Project = model("Project", ProjectSchema);

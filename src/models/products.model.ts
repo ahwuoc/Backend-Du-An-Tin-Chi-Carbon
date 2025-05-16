@@ -12,7 +12,22 @@ interface IAccountManager {
   email: string;
   phone: string;
 }
-
+interface ITimeLine {
+  date: string;
+  event: string;
+  upcoming?: boolean;
+}
+interface ReportItem {
+  title: string;
+  date: string;
+  url: string;
+}
+interface Certificate {
+  id: string;
+  title: string;
+  date: Date;
+  url: string;
+}
 export interface IProduct extends Document {
   name: string;
   type: "carbon_credits" | "carbon_accounting" | "international_certificates";
@@ -27,6 +42,7 @@ export interface IProduct extends Document {
   carbonAmount?: number;
   carbonUsed?: number;
   verificationStandard?: string;
+  reports?: ReportItem[];
   usageStats?: {
     totalUsage: number;
     lastMonthUsage: number;
@@ -41,6 +57,8 @@ export interface IProduct extends Document {
   issuer?: string;
   accountManager: IAccountManager;
   area?: number;
+  timeline?: ITimeLine[];
+  certificates?: Certificate[];
 }
 
 const ProductSchema: Schema = new Schema(
@@ -55,12 +73,45 @@ const ProductSchema: Schema = new Schema(
       ],
       required: true,
     },
+    certificates: {
+      type: [
+        {
+          title: { type: String, required: true },
+          date: { type: String, required: true },
+          url: { type: String, required: true },
+        },
+      ],
+      required: false,
+      _id: true,
+    },
     description: { type: String, required: true },
     purchaseDate: { type: Date, required: true },
     status: {
       type: String,
       enum: ["active", "pending", "expired"],
       required: true,
+    },
+    timeline: {
+      type: [
+        {
+          date: { type: String, required: true },
+          event: { type: String, required: true },
+          upcoming: { type: Boolean, required: false },
+        },
+      ],
+      required: false,
+      _id: true,
+    },
+    reports: {
+      type: [
+        {
+          title: { type: String, required: true },
+          date: { type: String, required: true },
+          url: { type: String, required: true },
+        },
+      ],
+      _id: true,
+      required: false,
     },
     expiryDate: { type: Date, required: false },
     image: { type: String, required: false },
@@ -109,7 +160,7 @@ const ProductSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const Product = mongoose.model<IProduct>("Product", ProductSchema);

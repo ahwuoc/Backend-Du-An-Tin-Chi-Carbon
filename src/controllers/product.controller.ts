@@ -140,6 +140,84 @@ class ProductController {
       res.status(500).json({ message: "Something went wrong!", error });
     }
   }
+  public async updateTimeline(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { timeline } = req.body;
+
+      if (!Array.isArray(timeline)) {
+        res.status(400).json({ error: "timeline phải là một mảng" });
+        return;
+      }
+
+      const product = await Product.findByIdAndUpdate(
+        id,
+        { timeline },
+        { new: true, runValidators: true }
+      );
+
+      if (!product) {
+        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        return;
+      }
+
+      res.status(200).json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+    }
+  }
+  public async updateReports(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { updatedReports } = req.body;
+
+      if (!Array.isArray(updatedReports)) {
+        res.status(400).json({ error: "reports phải là một mảng" });
+        return;
+      }
+
+      const product = await Product.findByIdAndUpdate(
+        id,
+        { reports: updatedReports },
+        { new: true, runValidators: true }
+      );
+
+      if (!product) {
+        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        return;
+      }
+
+      res.status(200).json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+    }
+  }
+  public async updateCertificates(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { certificates } = req.body;
+      console.log(req.body);
+      if (!Array.isArray(certificates)) {
+        res.status(400).json({ error: "certificates phải là một mảng" });
+        return;
+      }
+
+      const product = await Product.findByIdAndUpdate(
+        id,
+        { certificates: certificates },
+        { new: true, runValidators: true }
+      );
+
+      if (!product) {
+        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        return;
+      }
+
+      res.status(200).json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+    }
+  }
 
   public async deleteProduct(req: Request, res: Response): Promise<void> {
     try {

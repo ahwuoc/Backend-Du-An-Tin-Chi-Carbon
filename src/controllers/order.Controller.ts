@@ -177,7 +177,11 @@ class OrderController {
         "productId"
       );
 
-      res.json({ orders });
+      const totalAmount = orders.reduce((acc, order) => {
+        return acc + (order.amount || 0);
+      }, 0);
+
+      res.json({ orders, totalAmount });
       return;
     } catch (err) {
       res.status(500).json({ message: "Lỗi server", error: err });

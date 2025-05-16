@@ -14,6 +14,11 @@ import newsRouter from "./routes/news.router";
 import projectRouter from "./routes/project.router";
 import affiliateRouter from "./routes/affiliate.router";
 import ProjectCarbonRouter from "./routes/project-carbon.router";
+import affiliatepaymethodRouter from "./routes/affiliate-paymethod.router";
+import affiliatransactionRouter from "./routes/affiliate-transaction.router";
+import certificatesRouter from "./routes/certificate.router";
+import creditcarbonRouter from "./routes/credit-carbon.router";
+
 import "./models/users.model";
 import "./models/news.model";
 import "./models/affiliate.model";
@@ -55,6 +60,11 @@ app.use("/uploads", express.static("uploads"));
   app.use("/api/orders", orderRouter);
   app.use("/api/products", productRouter);
   app.use("/api/affiliates", affiliateRouter);
+  app.use("/api/payment-method", affiliatepaymethodRouter);
+  app.use("/api/transactions", affiliatransactionRouter);
+  app.use("/api/certificates", certificatesRouter);
+  app.use("/api/carboncredits", creditcarbonRouter);
+
   app.use("/api/news", newsRouter);
   app.use(notFoundHandler);
   const port = process.env.PORT || 5000;

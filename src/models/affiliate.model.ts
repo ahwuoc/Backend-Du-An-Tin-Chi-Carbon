@@ -12,6 +12,7 @@ export interface IAffiliate extends Document {
   socialMedia?: string;
   experience?: string;
   referralLink: string;
+  referralCode: string; // <-- thêm dòng này
   totalClicks: number;
   totalRegistrations: number;
   totalCommission: number;
@@ -34,6 +35,11 @@ const AffiliateSchema = new Schema(
     socialMedia: String,
     experience: String,
     referralLink: String,
+    referralCode: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
     totalClicks: Number,
     totalRegistrations: Number,
     totalCommission: Number,
@@ -44,8 +50,26 @@ const AffiliateSchema = new Schema(
     },
     paymentLinkId: String,
   },
-  { timestamps: true }, // để tự động có createdAt + updatedAt
+  { timestamps: true }
 );
+
+// Tạo mã ngẫu nhiên trước khi lưu
+AffiliateSchema.pre("save", async function (next) {
+  if (!this.referralCode) {
+    let code: string = "";
+    let isDuplicate = true;
+
+    while (isDuplicate) {
+      code = Math.random().toString(36).substring(2, 8).toUpperCase(); // VD: "X9A2BZ"
+      const existing = await mongoose.models.Affiliate.findOne({
+        referralCode: code,
+      });
+      if (!existing) isDuplicate = false;
+    }
+    this.referralCode = code;
+  }
+  next();
+});
 
 const Affiliate =
   mongoose.models.Affiliate ||

@@ -14,9 +14,9 @@ const AffiliateTransactionSchema: Schema = new Schema(
   {
     affiliateId: {
       type: Schema.Types.ObjectId,
-      ref: "Affiliate", // Tham chiếu tới collection Affiliate
+      ref: "Affiliate",
       required: true,
-      index: true, // Index để tối ưu truy vấn theo affiliateId
+      index: true,
     },
     customer: {
       type: String,
@@ -51,14 +51,14 @@ const AffiliateTransactionSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 const AffiliateTransaction =
   mongoose.models.AffiliateTransaction ||
   mongoose.model<IAffiliateTransaction>(
     "AffiliateTransaction",
-    AffiliateTransactionSchema,
+    AffiliateTransactionSchema
   );
 
 export default AffiliateTransaction;

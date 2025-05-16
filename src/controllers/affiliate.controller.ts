@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { UserModel } from "../models/users.model";
 import { sendEmail } from "../utils/sendEmail";
 import { templateAfifliate } from "../utils/emailTemplates";
+import AffiliatePaymentMethod from "../models/affiliate-paymethod.model";
 class AffiliateController {
   async createAffiliate(req: Request, res: Response) {
     try {
@@ -107,21 +108,33 @@ class AffiliateController {
   async getAffiliateByUserId(req: Request, res: Response) {
     const userId = req.params.id;
     try {
-      const affiliate = await Affiliate.findOne({ userId })
-        .populate("userId")
-        .lean();
+      const affiliate = await Affiliate.findOne({ userId }).populate("userId");
       if (!affiliate) {
         res.status(404).json({ message: "Affiliate not found" });
       }
+      const paymethod = await AffiliatePaymentMethod.findOne({
+        affiliateId: affiliate._id,
+      }).lean();
+      if (!paymethod) {
+        res.status(200).json({
+          message: "Affiliate found, but no payment method available",
+          affiliate,
+          paymethod: null,
+        });
+        return;
+      }
       res.status(200).json({
-        message: "Affiliates retrieved successfully",
-        affiliates: [affiliate],
+        message: "Affiliate and payment method retrieved successfully",
+        affiliate,
+        paymethod,
       });
+      return;
     } catch (error) {
       console.error("Error fetching affiliate:", error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
+
   async updateAffiliate(req: Request, res: Response) {
     try {
       const { id } = req.params;

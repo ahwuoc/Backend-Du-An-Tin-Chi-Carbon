@@ -170,22 +170,9 @@ class AuthController {
         });
         return;
       }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = await this.userModel.create({
-        email,
-        password: hashedPassword,
-        name,
-        role,
-        ref,
-      });
-
-      const { password: _, ...userResponse } = newUser.toObject();
-
       res.status(201).json({
         success: true,
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
-        user: userResponse,
       });
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
@@ -202,9 +189,6 @@ class AuthController {
     next: NextFunction
   ): Promise<void> {
     const googleAccessToken = req.params.access_token;
-
-    console.log("🔑 Google Access Token nhận được:", googleAccessToken);
-
     if (!googleAccessToken) {
       res.status(400).json({
         success: false,
@@ -225,8 +209,6 @@ class AuthController {
       );
 
       const googleUserData = userInfoResponse.data;
-      console.log("✅ Dữ liệu người dùng từ Google:", googleUserData);
-
       if (!googleUserData || !googleUserData.email) {
         res.status(400).json({
           success: false,
@@ -235,10 +217,6 @@ class AuthController {
         });
         return;
       }
-      console.log(
-        "🔍 Đang tìm hoặc tạo người dùng trong database với email:",
-        googleUserData.email
-      );
       let user = await this.userModel.findOne({
         email: googleUserData.email,
       });
@@ -246,7 +224,6 @@ class AuthController {
       if (!user) {
         const randomPassword = Math.random().toString(36).slice(-8) + "G!";
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
         user = await this.userModel.create({
           email: googleUserData.email,
           name: googleUserData.name || googleUserData.given_name,
@@ -257,10 +234,6 @@ class AuthController {
           provider: "google",
         });
         isNewUser = true;
-        console.log(
-          "👤 Người dùng mới đã được tạo từ Google OAuth:",
-          user.email
-        );
       } else {
         let changed = false;
         if (user.avatar && googleUserData.picture) {
@@ -270,12 +243,7 @@ class AuthController {
         if (changed) {
           await user.save();
         }
-        console.log(
-          "👤 Người dùng đã tồn tại, đăng nhập qua Google:",
-          user.email
-        );
       }
-
       const userPayloadForToken = {
         userId: user!._id.toString(),
         email: user!.email,
@@ -283,30 +251,20 @@ class AuthController {
         name: user!.name,
       };
       const token = this.createToken(userPayloadForToken, JWT_EXPIRES_IN);
-
       res.cookie("token", token, {
         httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-
-      const { password: _, ...userResponse } = user!.toObject();
-
       res.status(isNewUser ? 201 : 200).json({
         success: true,
-        message: "Đăng nhập qua Google thành công!",
-        userData: userResponse,
+        token,
       });
     } catch (error: any) {
-      console.error(
-        "🚨 Lỗi khi xử lý Google Login:",
-        error.response?.data || error.message
-      );
       res.status(500).json({
         success: false,
         error: "Lỗi hệ thống khi xử lý đăng nhập Google.",
-        details: error.response?.data?.error?.message || error.message,
       });
     }
   }
@@ -319,10 +277,8 @@ class AuthController {
         .json({ success: false, error: "Thiếu email hoặc mật khẩu." });
       return;
     }
-
     try {
       const user = await this.userModel.findOne({ email }).select("+password");
-
       if (!user) {
         res
           .status(401)
@@ -337,7 +293,6 @@ class AuthController {
           .json({ success: false, error: "Email hoặc mật khẩu không đúng." });
         return;
       }
-
       const userPayloadForToken = {
         userId: user._id.toString(),
         email: user.email,
@@ -353,11 +308,9 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
       });
-      const { password: __, ...userResponse } = user.toObject();
       res.status(200).json({
         success: true,
         message: "Đăng nhập thành công!",
-        userData: userResponse,
         token,
       });
     } catch (error: any) {
