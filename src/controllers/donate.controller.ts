@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Donation from "../models/donate.model";
 
 class DonationController {
@@ -55,12 +55,12 @@ class DonationController {
 
       const totalQuantity = donations.reduce(
         (acc, donation) => acc + donation.quantity,
-        0,
+        0
       );
 
       const totalTreeCount = donations.reduce(
         (acc, donation) => acc + (donation.treeCount || 0),
-        0,
+        0
       );
 
       const contributorMap: Record<string, number> = {};
@@ -77,7 +77,7 @@ class DonationController {
         ([email, treeCount]) => ({
           email,
           treeCount,
-        }),
+        })
       );
 
       res.status(200).json({

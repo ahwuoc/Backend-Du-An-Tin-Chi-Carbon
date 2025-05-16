@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { Product, IProduct } from "../models/products.model";
+import type { Request, Response } from "express";
+import { Product, type IProduct } from "../models/products.model";
 
 class ProductController {
   public async getFreeTrialProduct(req: Request, res: Response): Promise<void> {

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -q",
+    "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
@@ -28,7 +28,7 @@
     "i": "^0.3.7",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.14.2",
+    "mongoose": "^8.15.0",
     "multer": "^1.4.5-lts.2",
     "nanoid": "^5.1.5",
     "node-fetch": "^3.3.2",
@@ -43,7 +43,7 @@
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/mongoose": "^5.11.96",
+    "@types/mongoose": "^5.11.97",
     "@types/node": "^22.15.2",
     "@types/nodemailer": "^6.4.17",
     "@types/validator": "^13.15.0",

@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { CarbonProduct, ICarbonProduct } from "../models/carbonproduct";
+import type { Request, Response } from "express";
+import { CarbonProduct, type  ICarbonProduct } from "../models/carbonproduct";
 
 export const createCarbonProduct = async (req: Request, res: Response) => {
   try {

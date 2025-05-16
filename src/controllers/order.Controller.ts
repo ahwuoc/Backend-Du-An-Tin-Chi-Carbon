@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Order from "../models/order.model";
-import { Product, IProduct } from "../models/products.model";
-import { IOrder } from "../models/order.model";
+import { Product, type IProduct } from "../models/products.model";
+import type { IOrder } from "../models/order.model";
 import { sendMailRegisterCheckout } from "../utils/emailTemplates";
 import { sendEmail } from "../utils/sendEmail";
 import { createOrder } from "../utils/featch.bank";

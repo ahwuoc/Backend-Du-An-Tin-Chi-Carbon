@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import AffiliateTransaction, {
-  IAffiliateTransaction,
+  type IAffiliateTransaction,
 } from "../models/affiliate-transaction.model";
 export class AffiliateTransactionController {
   static async getAll(req: Request, res: Response) {

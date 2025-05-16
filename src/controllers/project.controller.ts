@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Project } from "../models/project.model";
 class ProjectController {
@@ -87,8 +87,13 @@ class ProjectController {
   async getProjectById(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      if (!id) {
+        res.status(400).json({ message: "Invalid project ID" });
+        return;
+      }
       if (!mongoose.Types.ObjectId.isValid(id)) {
         res.status(400).json({ message: "Invalid project ID" });
+        return;
       }
       const project = await Project.findById(id).populate("userId"); // Nếu liên kết với User model
       if (!project) {

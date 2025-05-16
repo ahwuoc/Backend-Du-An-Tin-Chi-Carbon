@@ -1,11 +1,10 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import AffiliatePaymentMethod, {
-  IAffiliatePaymentMethod,
+  type IAffiliatePaymentMethod,
 } from "../models/affiliate-paymethod.model";
-import { IPaymentMethod } from "../models/paymethod.model";
+import { type IPaymentMethod } from "../models/paymethod.model";
 import Affiliate from "../models/affiliate.model";
-import { param } from "express-validator";
 
 const isValidObjectId = (id: string) => mongoose.Types.ObjectId.isValid(id);
 
@@ -37,6 +36,10 @@ export default class AffiliatePaymentMethodController {
     try {
       const { methodId } = req.params;
 
+      if (!methodId) {
+        res.status(400).json({ message: "Invalid Affiliate or Method ID" });
+        return;
+      }
       if (!isValidObjectId(methodId)) {
         res.status(400).json({ message: "Invalid Affiliate or Method ID" });
         return;
@@ -79,6 +82,7 @@ export default class AffiliatePaymentMethodController {
       const affiliate = await Affiliate.findOne({ userId });
       if (!affiliate) {
         res.status(404).json({ message: "Affiliate not found" });
+        return;
       }
 
       if (!type || !details) {
@@ -116,7 +120,10 @@ export default class AffiliatePaymentMethodController {
     try {
       const { methodId } = req.params;
       const updateData = req.body;
-
+      if (!methodId) {
+        res.status(400).json({ message: "Invalid Affiliate or Method ID" });
+        return;
+      }
       if (!isValidObjectId(methodId)) {
         res.status(400).json({ message: "Invalid Affiliate or Method ID" });
         return;
@@ -187,6 +194,10 @@ export default class AffiliatePaymentMethodController {
     try {
       const { methodId } = req.params;
 
+      if (!methodId) {
+        res.status(400).json({ message: "Invalid method ID" });
+        return;
+      }
       if (!isValidObjectId(methodId)) {
         res.status(400).json({ message: "Invalid method ID" });
         return;

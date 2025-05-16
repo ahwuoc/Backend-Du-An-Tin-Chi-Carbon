@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 // Import Affiliate interface/type
-import { IAffiliate } from "./affiliate.model";
-
+import { type IAffiliate } from "./affiliate.model";
 // Define Interface for Affiliate Payment Method Document
 export interface IAffiliatePaymentMethod extends Document {
   // Reference to the Affiliate this payment method belongs to

@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Consultation from "../models/consultation";
-import { IConsultation } from "../types/consultation";
+import type { IConsultation } from "../types/consultation";
 
 interface ConsultationRequest extends Request {
   body: { formData: IConsultation }; // Thêm formData vào trong body

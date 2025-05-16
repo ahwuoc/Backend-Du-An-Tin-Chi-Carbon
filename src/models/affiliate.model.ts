@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
 export interface IAffiliate extends Document {
   userId: Types.ObjectId;
@@ -12,7 +12,7 @@ export interface IAffiliate extends Document {
   socialMedia?: string;
   experience?: string;
   referralLink: string;
-  referralCode: string; // <-- thêm dòng này
+  referralCode: string;
   totalClicks: number;
   totalRegistrations: number;
   totalCommission: number;
@@ -22,7 +22,7 @@ export interface IAffiliate extends Document {
   paymentLinkId?: string;
 }
 
-const AffiliateSchema = new Schema(
+const AffiliateSchema = new Schema<IAffiliate>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     fullName: String,
@@ -53,15 +53,14 @@ const AffiliateSchema = new Schema(
   { timestamps: true }
 );
 
-// Tạo mã ngẫu nhiên trước khi lưu
 AffiliateSchema.pre("save", async function (next) {
   if (!this.referralCode) {
-    let code: string = "";
+    let code = "";
     let isDuplicate = true;
 
     while (isDuplicate) {
-      code = Math.random().toString(36).substring(2, 8).toUpperCase(); // VD: "X9A2BZ"
-      const existing = await mongoose.models.Affiliate.findOne({
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const existing = await mongoose.models.Affiliate?.findOne({
         referralCode: code,
       });
       if (!existing) isDuplicate = false;
@@ -71,8 +70,8 @@ AffiliateSchema.pre("save", async function (next) {
   next();
 });
 
-const Affiliate =
-  mongoose.models.Affiliate ||
+const AffiliateModel: Model<IAffiliate> =
+  (mongoose.models.Affiliate as Model<IAffiliate>) ||
   mongoose.model<IAffiliate>("Affiliate", AffiliateSchema);
 
-export default Affiliate;
+export default AffiliateModel;

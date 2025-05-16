@@ -1,4 +1,4 @@
-import { Request, Response } from "express"; // Import Express types
+import type { Request, Response } from "express"; // Import Express types
 import { ProjectCarbon } from "../models/project-carbon.model";
 import { Types } from "mongoose";
 

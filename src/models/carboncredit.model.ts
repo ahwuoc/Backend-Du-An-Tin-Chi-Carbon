@@ -1,4 +1,4 @@
-import { Schema, model, models, Document } from "mongoose";
+import { Schema, model, models, Document, Model } from "mongoose"; // Import Model
 
 interface CarbonCreditDoc extends Document {
   title: string;
@@ -116,8 +116,10 @@ const CarbonCreditSchema = new Schema<CarbonCreditDoc>({
   timeline: [TimelineSchema],
 });
 
-const CarbonCredit =
-  models.CarbonCredit ||
-  model<CarbonCreditDoc>("CarbonCredit", CarbonCreditSchema);
+const CarbonCredit = (models.CarbonCredit ||
+  model<CarbonCreditDoc>(
+    "CarbonCredit",
+    CarbonCreditSchema
+  )) as Model<CarbonCreditDoc>;
 
 export default CarbonCredit;

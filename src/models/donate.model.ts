@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose"; // Import Model
 
 interface IDonation extends Document {
   name: string;
@@ -6,6 +6,8 @@ interface IDonation extends Document {
   phone: string;
   quantity: number;
   note?: string;
+  user?: string;
+  treeCount?: number;
   totalAmount: number;
   bankInfo: {
     accountName: string;
@@ -34,5 +36,5 @@ const DonationSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.models.Donation ||
-  mongoose.model<IDonation>("Donation", DonationSchema);
+export default (mongoose.models.Donation ||
+  mongoose.model<IDonation>("Donation", DonationSchema)) as Model<IDonation>;

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { Certificate } from "../models/certificate.model";
 
 export class CertificateController {

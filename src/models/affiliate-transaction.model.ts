@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Document, Types, Model } from "mongoose"; // Import Model
 
 export interface IAffiliateTransaction extends Document {
   affiliateId: Types.ObjectId;
@@ -54,11 +54,10 @@ const AffiliateTransactionSchema: Schema = new Schema(
   }
 );
 
-const AffiliateTransaction =
-  mongoose.models.AffiliateTransaction ||
+const AffiliateTransaction = (mongoose.models.AffiliateTransaction ||
   mongoose.model<IAffiliateTransaction>(
     "AffiliateTransaction",
     AffiliateTransactionSchema
-  );
+  )) as Model<IAffiliateTransaction>; // <--- Thêm khẳng định kiểu ở đây
 
 export default AffiliateTransaction;

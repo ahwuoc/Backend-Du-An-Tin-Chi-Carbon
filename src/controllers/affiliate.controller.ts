@@ -1,6 +1,6 @@
-import mongoose, { Types } from "mongoose";
+import { Types } from "mongoose";
 import Affiliate from "../models/affiliate.model";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { UserModel } from "../models/users.model";
 import { sendEmail } from "../utils/sendEmail";
 import { templateAfifliate } from "../utils/emailTemplates";
@@ -111,10 +111,13 @@ class AffiliateController {
       const affiliate = await Affiliate.findOne({ userId }).populate("userId");
       if (!affiliate) {
         res.status(404).json({ message: "Affiliate not found" });
+        return;
       }
+
       const paymethod = await AffiliatePaymentMethod.findOne({
         affiliateId: affiliate._id,
       }).lean();
+
       if (!paymethod) {
         res.status(200).json({
           message: "Affiliate found, but no payment method available",

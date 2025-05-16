@@ -1,10 +1,10 @@
 import {
   Router,
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler,
-  ErrorRequestHandler, // Thêm ErrorRequestHandler cho globalErrorHandler
+  type Request,
+  type Response,
+  type NextFunction,
+  type RequestHandler,
+  type ErrorRequestHandler, // Thêm ErrorRequestHandler cho globalErrorHandler
 } from "express";
 import AuthController from "../controllers/auth.controller";
 import rateLimit from "express-rate-limit";
@@ -12,7 +12,7 @@ import {
   query,
   body,
   validationResult,
-  ValidationChain,
+  type ValidationChain,
 } from "express-validator";
 
 interface RequestAuthentication extends Request {

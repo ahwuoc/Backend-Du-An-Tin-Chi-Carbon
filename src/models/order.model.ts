@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose"; // Import Model
 
 // Định nghĩa interface cho Order
 export interface IOrder extends Document {
@@ -11,6 +11,7 @@ export interface IOrder extends Document {
   buyerPhone: string;
   buyerAddress: string;
   amount: number;
+  paymentStatus?: string;
   expiredAt: Date;
   linkthanhtoan: string;
   status: "pending" | "paid" | "shipped" | "cancelled";
@@ -49,8 +50,8 @@ const orderSchema: Schema<IOrder> = new Schema(
       default: () => new Date(),
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-export default mongoose.models.Order ||
-  mongoose.model<IOrder>("Order", orderSchema);
+export default (mongoose.models.Order ||
+  mongoose.model<IOrder>("Order", orderSchema)) as Model<IOrder>;
