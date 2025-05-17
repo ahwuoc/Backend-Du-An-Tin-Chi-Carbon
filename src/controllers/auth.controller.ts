@@ -178,6 +178,13 @@ class AuthController {
         role,
         createdAt: new Date(),
       });
+      if (!newUser) {
+        res.status(409).json({
+          success: false,
+          error: "Đăng ký thất bại vui lòng thử lại",
+        });
+        return;
+      }
       res.status(201).json({
         success: true,
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
