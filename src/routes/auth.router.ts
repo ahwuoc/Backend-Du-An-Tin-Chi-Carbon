@@ -147,14 +147,14 @@ const router = Router();
 
 router.post(
   "/register",
-  limitRequest(rateLimitMessages.register, 60 * 60 * 1000, 10),
+  limitRequest(rateLimitMessages.register, 60 * 60 * 1000, 100),
   validateRegistration,
   authController.register.bind(authController)
 );
 
 router.post(
   "/login",
-  limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 5),
+  limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
   validateLogin,
   authController.login.bind(authController)
 );
