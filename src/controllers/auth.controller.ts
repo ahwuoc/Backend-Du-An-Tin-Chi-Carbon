@@ -1,4 +1,4 @@
-import type  { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
@@ -356,7 +356,7 @@ class AuthController {
       const resetToken = this.createToken(resetTokenPayload, "15m");
 
       const resetLink = `${
-        process.env.FRONTEND_URL || "http://localhost:3000"
+        process.env.FRONT_END_URL || "http://localhost:3000"
       }/reset-password?token=${resetToken}`;
 
       const emailHtmlContent = resetPasswordContent(resetLink);

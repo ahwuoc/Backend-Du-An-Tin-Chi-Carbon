@@ -41,8 +41,8 @@ class AffiliateController {
 
       // Tạo referral link không cần code
       const referralLink = `${
-        process.env.APP_BASE_URL || "http://localhost:3000/"
-      }dang-ky?ref=${userId}`;
+        process.env.FRONT_END_URL || "http://localhost:3000/"
+      }/dang-ky?ref=${userId}`;
 
       // Tạo bản ghi affiliate
       const affiliate = new Affiliate({
