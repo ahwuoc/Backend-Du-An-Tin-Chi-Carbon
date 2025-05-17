@@ -61,18 +61,18 @@ class OrderController {
         const orderData = new Order({
           orderCode: `MA_ORDER-${OrderBank.orderCode}`,
           amount: product.price + 1,
-          linkthanhtoan: "",
-          status: "success",
-          referralCode: referralCode,
-          buyerPhone: buyerPhone,
-          buyerAddress: buyerAddress,
+          status: "paid",
+          referralCode,
+          buyerPhone,
+          buyerAddress,
           buyerEmail: email,
-          paymentLinkId: "",
           productId: new mongoose.Types.ObjectId(productId),
-          expiredAt: "",
           userId: new mongoose.Types.ObjectId(userId),
           createdAt: new Date(),
-          buyerName: buyerName,
+          buyerName,
+          paymentLinkId: null,
+          linkthanhtoan: null,
+          expiredAt: null,
         });
         console.log("Saving order:", orderData);
         await orderData.save();
