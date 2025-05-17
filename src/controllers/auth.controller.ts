@@ -142,7 +142,7 @@ class AuthController {
   };
 
   public register: ExpressHandler = async (req, res, next) => {
-    const { email, password, name, role = "user", ref } = req.body;
+    const { email, password, name, role = "user" } = req.body;
     if (!email || !password || !name) {
       res.status(400).json({
         success: false,
@@ -170,9 +170,21 @@ class AuthController {
         });
         return;
       }
+      const newUser = await this.userModel.create({
+        email,
+        password,
+        name,
+        role,
+        createdAt: new Date(),
+      });
       res.status(201).json({
         success: true,
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+        },
       });
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
