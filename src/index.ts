@@ -55,7 +55,7 @@ app.set("trust proxy", 1);
         }
       },
       credentials: true,
-    })
+    })  
   );
 
   // Middleware log tất cả request
