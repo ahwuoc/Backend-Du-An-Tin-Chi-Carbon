@@ -169,24 +169,20 @@ class ProductController {
   public async updateReports(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { updatedReports } = req.body;
-
-      if (!Array.isArray(updatedReports)) {
+      const { reports } = req.body;
+      if (!Array.isArray(reports)) {
         res.status(400).json({ error: "reports phải là một mảng" });
         return;
       }
-
       const product = await Product.findByIdAndUpdate(
         id,
-        { reports: updatedReports },
+        { reports: reports },
         { new: true, runValidators: true }
       );
-
       if (!product) {
         res.status(404).json({ error: "Không tìm thấy sản phẩm" });
         return;
       }
-
       res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ message: "Có lỗi xảy ra!", error });
