@@ -7,6 +7,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { createOrder } from "../utils/featch.bank";
 import mongoose from "mongoose";
 import Affiliate from "../models/affiliate.model";
+
 type OrderSend = Partial<IOrder>;
 class OrderController {
   async create(req: Request, res: Response) {
@@ -35,9 +36,16 @@ class OrderController {
         });
         return;
       }
+
+      const product = await Product.findById(productId);
+      if (!product) {
+        res.status(400).json({
+          error: `Sản phẩm không tồn tại`,
+        });
+        return;
+      }
       const affiliate = await Affiliate.findOne({ userId });
       const referralCode = affiliate?.referralCode || null;
-      console.log("Affiliate lookup:", { userId, referralCode });
       const OrderBank = {
         orderCode: Date.now(),
         amount: amount,
@@ -47,10 +55,32 @@ class OrderController {
         buyerPhone: buyerPhone,
         buyerAddress: buyerAddress,
       };
+      if (product.price === 0) {
+        const mailContent = sendMailRegisterCheckout(OrderBank);
+        const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
+        const orderData = new Order({
+          orderCode: `MA_ORDER-${OrderBank.orderCode}`,
+          amount: product.price + 1,
+          linkthanhtoan: "",
+          status: "success",
+          referralCode: referralCode,
+          buyerPhone: buyerPhone,
+          buyerAddress: buyerAddress,
+          buyerEmail: email,
+          paymentLinkId: "",
+          productId: new mongoose.Types.ObjectId(productId),
+          expiredAt: "",
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: new Date(),
+          buyerName: buyerName,
+        });
+        console.log("Saving order:", orderData);
+        await orderData.save();
+        console.log("Order saved successfully:", orderData.orderCode);
+        res.status(201).json(orderData);
+      }
       const response = await createOrder(OrderBank);
-      console.log("Create order response:", response);
       if (response.code === "00") {
-        console.log("Sending email to:", email);
         const mailContent = sendMailRegisterCheckout(OrderBank);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
         if (!emailResult.success) {
@@ -77,7 +107,6 @@ class OrderController {
         console.log("Saving order:", orderData);
         await orderData.save();
         console.log("Order saved successfully:", orderData.orderCode);
-
         res.status(201).json(orderData);
       } else {
         console.error("Payment system error:", response);
