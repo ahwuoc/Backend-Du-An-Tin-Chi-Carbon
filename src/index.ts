@@ -46,7 +46,7 @@ app.use("/uploads", express.static("uploads"));
   await connectDB();
   app.use(
     cors({
-      origin: "*",
+      origin: "https://fe-ahwuocs-projects.vercel.app/",
       credentials: true,
     })
   );
