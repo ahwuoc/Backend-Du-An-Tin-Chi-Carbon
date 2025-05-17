@@ -34,6 +34,7 @@ const allowedOrigins = [
   "https://fe-git-master-ahwuocs-projects.vercel.app",
 ];
 const app = express();
+app.set("trust proxy", 1);
 app.post(
   "/upload-image",
   upload.single("image"),
