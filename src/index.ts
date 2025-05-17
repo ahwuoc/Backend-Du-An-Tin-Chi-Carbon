@@ -56,7 +56,7 @@ app.use("/uploads", express.static("uploads"));
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
-        }
+        } 
       },
       credentials: true,
     })
