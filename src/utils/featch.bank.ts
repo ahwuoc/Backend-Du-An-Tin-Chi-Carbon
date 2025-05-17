@@ -1,10 +1,11 @@
 import crypto from "crypto";
-import fetch from "node-fetch";
+import axios from "axios";
 
 const CLIENT_ID = "5c0c22e2-b45f-4dcc-85dd-6a366a44c7d6";
 const API_KEY = "446cfd67-a5aa-45f2-86d2-1a3908dffb13";
 const CHECKSUM_KEY =
   "861a796606578362e119f3f83192035c9390c43b1c46d91b0fddee17deef9ef6";
+
 const currentTime = Math.floor(Date.now() / 1000);
 const expiredAt = currentTime + 3600;
 
@@ -18,6 +19,7 @@ export async function createOrder(order: any): Promise<any> {
       .createHmac("sha256", CHECKSUM_KEY)
       .update(rawSignature)
       .digest("hex");
+
     const payload = {
       ...order,
       expiredAt,
@@ -25,49 +27,46 @@ export async function createOrder(order: any): Promise<any> {
       returnUrl,
       signature,
     };
-    const response = await fetch(
+
+    const response = await axios.post(
       "https://api-merchant.payos.vn/v2/payment-requests",
+      payload,
       {
-        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-client-id": CLIENT_ID,
           "x-api-key": API_KEY,
         },
-        body: JSON.stringify(payload),
-      },
+      }
     );
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ PayOS trả về lỗi:", errorData);
-      throw new Error(`Error from PayOS: ${JSON.stringify(errorData)}`);
-    }
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    throw new Error("Có lỗi xảy ra khi tạo đơn hàng");
+
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "❌ PayOS trả về lỗi:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      `Error from PayOS: ${error.response?.data || error.message}`
+    );
   }
 }
+
 export async function getOrderPaymentInfo(orderId: string): Promise<any> {
   try {
     const url = `https://api-merchant.payos.vn/v2/payment-requests/${orderId}`;
-    const response = await fetch(url, {
-      method: "GET",
+    const response = await axios.get(url, {
       headers: {
-        "x-client-id": CLIENT_ID, // Dùng hằng số
-        "x-api-key": API_KEY, // Dùng hằng số
+        "x-client-id": CLIENT_ID,
+        "x-api-key": API_KEY,
       },
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Error fetching payment info: ${errorData}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin link thanh toán:", error);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Lỗi khi lấy thông tin link thanh toán:",
+      error.response?.data || error.message
+    );
     throw new Error("Có lỗi xảy ra khi lấy thông tin");
   }
 }
