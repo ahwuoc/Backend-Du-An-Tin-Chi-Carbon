@@ -46,7 +46,7 @@ app.use("/uploads", express.static("uploads"));
   await connectDB();
   app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: "*",
       credentials: true,
     })
   );

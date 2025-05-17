@@ -4,14 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -q",
+    "dev": "bun watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "bun run dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "type": "commonjs",
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "@types/multer": "^1.4.12",
