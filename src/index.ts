@@ -47,7 +47,7 @@ app.use("/uploads", express.static("uploads"));
   app.use(
     cors({
       origin: "https://fe-ahwuocs-projects.vercel.app",
-      credentials: true,
+      credentials: false,
     })
   );
   app.use(express.json());
