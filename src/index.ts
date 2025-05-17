@@ -1,8 +1,12 @@
+// Import thư viện cần thiết
 import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
+// Load biến môi trường từ file .env
 dotenv.config();
+
+// Import các route
 import productRouter from "./routes/products.router";
 import consultationRouter from "./routes/consultation.router";
 import orderRouter from "./routes/order.router";
@@ -19,6 +23,7 @@ import affiliatransactionRouter from "./routes/affiliate-transaction.router";
 import certificatesRouter from "./routes/certificate.router";
 import creditcarbonRouter from "./routes/credit-carbon.router";
 
+// Import models (chỉ cần gọi để khởi tạo)
 import "./models/users.model";
 import "./models/news.model";
 import "./models/affiliate.model";
@@ -26,36 +31,24 @@ import "./models/consultation";
 import "./models/payment";
 import "./models/donate.model";
 import "./models/project.model";
-import { notFoundHandler } from "./routes/notfound";
-import { upload } from "./routes/upload.router";
 
+// Middleware và route cho xử lý lỗi 404
+import { notFoundHandler } from "./routes/notfound";
 const allowedOrigins = [
   "https://fe-ahwuocs-projects.vercel.app",
   "http://localhost:3000",
   "https://fe-git-master-ahwuocs-projects.vercel.app",
 ];
 const app = express();
+app.use(express.json());
 app.set("trust proxy", 1);
-app.post(
-  "/upload-image",
-  upload.single("image"),
-  (req: Request, res: Response) => {
-    if (!req.file) {
-      res.status(400).json({ error: "No file uploaded" });
-    }
-    const imageUrl = `/uploads/${req.file?.filename}`;
-    res.json({ url: imageUrl });
-  }
-);
-
-app.use("/uploads", express.static("uploads"));
 (async () => {
   await connectDB();
   app.use(
     cors({
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
@@ -64,15 +57,18 @@ app.use("/uploads", express.static("uploads"));
       credentials: true,
     })
   );
+
+  // Middleware log tất cả request
   app.use((req, res, next) => {
     console.log(`\n[Request] ${req.method} ${req.url}`);
     console.log("Headers:", req.headers);
-    if (req.method === "POST" || req.method === "PUT") {
+    if (["POST", "PUT"].includes(req.method)) {
       console.log("Body:", req.body);
     }
     next();
   });
-  app.use(express.json());
+
+  // Đăng ký các router
   app.use("/api", authRouter);
   app.use("/api/consultation", consultationRouter);
   app.use("/api/projects", projectRouter);
@@ -86,9 +82,12 @@ app.use("/uploads", express.static("uploads"));
   app.use("/api/transactions", affiliatransactionRouter);
   app.use("/api/certificates", certificatesRouter);
   app.use("/api/carboncredits", creditcarbonRouter);
-
   app.use("/api/news", newsRouter);
+
+  // Middleware xử lý route không tồn tại
   app.use(notFoundHandler);
+
+  // Start server
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
     console.log(`🚀 Server running at http://localhost:${port}`);
