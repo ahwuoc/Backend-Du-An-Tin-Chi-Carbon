@@ -228,6 +228,7 @@ const requireAdmin: RequestHandler = (
 };
 
 router.get("/users", authController.getAllUser.bind(authController));
+router.delete("/:id", authController.deleteUserById.bind(authController));
 
 const globalErrorHandler: ErrorRequestHandler = (
   err: any,
