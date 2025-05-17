@@ -58,6 +58,5 @@ const AffiliateTransaction = (mongoose.models.AffiliateTransaction ||
   mongoose.model<IAffiliateTransaction>(
     "AffiliateTransaction",
     AffiliateTransactionSchema
-  )) as Model<IAffiliateTransaction>; // <--- Thêm khẳng định kiểu ở đây
-
+  )) as Model<IAffiliateTransaction>; 
 export default AffiliateTransaction;
