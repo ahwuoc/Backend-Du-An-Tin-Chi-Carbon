@@ -170,9 +170,10 @@ class AuthController {
         });
         return;
       }
+      const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await this.userModel.create({
         email,
-        password,
+        password: hashedPassword,
         name,
         role,
         createdAt: new Date(),
