@@ -12,8 +12,8 @@ export interface IOrder extends Document {
   buyerAddress: string;
   amount: number;
   paymentStatus?: string;
-  expiredAt: Date;
-  linkthanhtoan: string;
+  expiredAt?: Date;
+  linkthanhtoan?: string;
   status: "pending" | "paid" | "shipped" | "cancelled";
   createdAt: Date;
 }
@@ -37,9 +37,9 @@ const orderSchema: Schema<IOrder> = new Schema(
     buyerPhone: { type: String, required: true },
     buyerAddress: { type: String, required: true },
     amount: { type: Number, required: true },
-    expiredAt: { type: Date, required: true },
+    expiredAt: { type: Date, required: false, default: null },
     nameItem: { type: String, required: false },
-    linkthanhtoan: { type: String, required: true },
+    linkthanhtoan: { type: String, required: false, default: null },
     status: {
       type: String,
       enum: ["pending", "paid", "shipped", "cancelled"],
