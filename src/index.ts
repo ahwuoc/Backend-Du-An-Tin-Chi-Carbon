@@ -45,6 +45,7 @@ app.post(
     res.json({ url: imageUrl });
   }
 );
+
 app.use("/uploads", express.static("uploads"));
 (async () => {
   await connectDB();
@@ -56,11 +57,19 @@ app.use("/uploads", express.static("uploads"));
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
-        } 
+        }
       },
       credentials: true,
     })
   );
+  app.use((req, res, next) => {
+    console.log(`\n[Request] ${req.method} ${req.url}`);
+    console.log("Headers:", req.headers);
+    if (req.method === "POST" || req.method === "PUT") {
+      console.log("Body:", req.body);
+    }
+    next();
+  });
   app.use(express.json());
   app.use("/api", authRouter);
   app.use("/api/consultation", consultationRouter);
