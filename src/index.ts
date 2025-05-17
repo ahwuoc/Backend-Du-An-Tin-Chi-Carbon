@@ -26,9 +26,13 @@ import "./models/consultation";
 import "./models/payment";
 import "./models/donate.model";
 import "./models/project.model";
-
 import { notFoundHandler } from "./routes/notfound";
 import { upload } from "./routes/upload.router";
+
+const allowedOrigins = [
+  "https://fe-ahwuocs-projects.vercel.app",
+  "https://fe-git-master-ahwuocs-projects.vercel.app",
+];
 const app = express();
 app.post(
   "/upload-image",
@@ -46,8 +50,15 @@ app.use("/uploads", express.static("uploads"));
   await connectDB();
   app.use(
     cors({
-      origin: "https://fe-ahwuocs-projects.vercel.app",
-      credentials: false,
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true,
     })
   );
   app.use(express.json());
