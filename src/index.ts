@@ -3,10 +3,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 dotenv.config();
-import connectDB from "./config/db";
 import productRouter from "./routes/products.router";
 import consultationRouter from "./routes/consultation.router";
 import orderRouter from "./routes/order.router";
+import connectDB from "./config/db";
 import carbon from "./routes/carbon-product.router";
 import donateTree from "./routes/donate-tree.router";
 import authRouter from "./routes/auth.router";

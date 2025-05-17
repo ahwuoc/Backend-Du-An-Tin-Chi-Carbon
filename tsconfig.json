@@ -1,34 +1,22 @@
 {
   "compilerOptions": {
-    // Environment setup & latest features
-    "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
-    "rootDir": "src/",
-    "outDir": "dist/",
-
-    // Bundler mode
-    "moduleResolution": "bundler",
-    // "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": false,
-    "baseUrl": "./",
-    "paths": {
-      "*": ["*"]
-    },
-
-    // Best practices
+    "target": "ES6",
+    "module": "CommonJS",
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".", 
+   
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/services/user.service.ts",
+    "src/core/base/error-middleware.base.ts"
+  ],
+  "exclude": ["node_modules"]
 }
