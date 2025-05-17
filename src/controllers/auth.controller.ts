@@ -186,6 +186,7 @@ class AuthController {
           email: newUser.email,
         },
       });
+      return;
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
       res.status(500).json({
