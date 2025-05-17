@@ -61,9 +61,7 @@ app.set("trust proxy", 1);
     }
     next();
   });
-
-  // Đăng ký các router
-  app.use("/api", authRouter);
+  app.use("/api/auth", authRouter);
   app.use("/api/consultation", consultationRouter);
   app.use("/api/projects", projectRouter);
   app.use("/api/project-carbons", ProjectCarbonRouter);

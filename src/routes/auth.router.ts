@@ -53,7 +53,7 @@ const validateRegistration: (ValidationChain | RequestHandler)[] = [
     .withMessage("Thiếu mật khẩu.")
     .isLength({ min: 6 })
     .withMessage("Mật khẩu phải có ít nhất 6 ký tự."),
-  handleValidationErrors, // Sử dụng handleValidationErrors đã sửa
+  handleValidationErrors,
 ];
 
 const validateLogin: (ValidationChain | RequestHandler)[] = [
@@ -189,13 +189,10 @@ router.post(
   validateChangePassword,
   authController.changePassword.bind(authController)
 );
-
-// Sửa: Đảm bảo hàm trả về void sau khi gửi response
 router.get(
   "/users/me",
   authController.authenticate.bind(authController),
   (req: RequestAuthentication, res: Response): void => {
-    // Thêm kiểu trả về : void
     if (req.user) {
       res.status(200).json({ success: true, user: req.user });
       return; // Kết thúc hàm
@@ -214,8 +211,6 @@ router.put(
   validateUpdateUser,
   authController.changeUser.bind(authController)
 );
-
-// Sửa: Đảm bảo hàm trả về void sau khi gửi response hoặc gọi next()
 const requireAdmin: RequestHandler = (
   req: RequestAuthentication,
   res: Response,
@@ -223,53 +218,41 @@ const requireAdmin: RequestHandler = (
 ): void => {
   // Thêm kiểu trả về : void (hoặc để TypeScript tự suy luận nếu thân hàm đúng)
   if (req.user && req.user.role === "admin") {
-    next(); // Gọi middleware/handler tiếp theo
-    return; // Kết thúc hàm
+    next();
+    return;
   }
   res.status(403).json({
     success: false,
     message: "Không có quyền truy cập. Yêu cầu quyền quản trị viên.",
   });
-  // return; // Có thể thêm return ở đây hoặc để hàm tự kết thúc
 };
 
 router.get("/users", authController.getAllUser.bind(authController));
 
-// Sửa: Sử dụng ErrorRequestHandler và đảm bảo hàm trả về void
 const globalErrorHandler: ErrorRequestHandler = (
-  // Sử dụng ErrorRequestHandler
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction // next là bắt buộc đối với ErrorRequestHandler ngay cả khi không dùng
+  next: NextFunction
 ): void => {
-  // Thêm kiểu trả về : void
   console.error("🚨 GLOBAL ERROR HANDLER CAUGHT:", err.stack || err);
-
-  // Quan trọng: Kiểm tra nếu headers đã được gửi đi
   if (res.headersSent) {
-    return next(err); // Chuyển cho trình xử lý lỗi mặc định của Express
+    return next(err);
   }
-
   if (err.status) {
     res.status(err.status).json({ success: false, message: err.message });
     return;
   }
-
   if (err.name === "UnauthorizedError") {
     res
       .status(401)
       .json({ success: false, message: "Token không hợp lệ hoặc đã hết hạn." });
     return;
   }
-
   res.status(500).json({
     success: false,
     message: "Lỗi máy chủ nội bộ. Chúng tôi đang cố gắng khắc phục!",
   });
-  // return; // Có thể thêm return ở đây hoặc để hàm tự kết thúc
 };
-
 router.use(globalErrorHandler);
-
 export default router;
