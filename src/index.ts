@@ -2,7 +2,6 @@
 import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-
 // Load biến môi trường từ file .env
 dotenv.config();
 
@@ -35,10 +34,12 @@ import "./models/project.model";
 // Middleware và route cho xử lý lỗi 404
 import { notFoundHandler } from "./routes/notfound";
 const allowedOrigins = [
-  "https://fe-ahwuocs-projects.vercel.app",
   "http://localhost:3000",
-  "https://fe-git-master-ahwuocs-projects.vercel.app",
+  "fe-theta-orcin.vercel.app",
+  "fe-git-master-ahwuocs-projects.vercel.app",
+  "fe-98au18ipf-ahwuocs-projects.vercel.app",
 ];
+
 const app = express();
 app.use(express.json());
 app.set("trust proxy", 1);
@@ -47,8 +48,7 @@ app.set("trust proxy", 1);
   app.use(
     cors({
       origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
