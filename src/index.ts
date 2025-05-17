@@ -31,6 +31,7 @@ import { upload } from "./routes/upload.router";
 
 const allowedOrigins = [
   "https://fe-ahwuocs-projects.vercel.app",
+  "http://localhost:3000",
   "https://fe-git-master-ahwuocs-projects.vercel.app",
 ];
 const app = express();
