@@ -120,7 +120,6 @@ class ProductController {
         res.status(400).json({ error: "Invalid product id" });
         return;
       }
-
       const updateData: Partial<IProduct> = req.body;
       if (updateData.purchaseDate)
         updateData.purchaseDate = new Date(updateData.purchaseDate);
@@ -134,11 +133,13 @@ class ProductController {
       const product = await Product.findOneAndUpdate(
         { _id: new Types.ObjectId(id) },
         updateData,
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!product) {
-        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        res
+          .status(404)
+          .json({ error: "Sản phẩm không tồn tại vui lòng thử lại" });
         return;
       }
 
@@ -160,7 +161,7 @@ class ProductController {
       const product = await Product.findByIdAndUpdate(
         id,
         { timeline },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!product) {
@@ -184,7 +185,7 @@ class ProductController {
       const product = await Product.findByIdAndUpdate(
         id,
         { reports: reports },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
       if (!product) {
         res.status(404).json({ error: "Không tìm thấy sản phẩm" });
@@ -206,7 +207,7 @@ class ProductController {
       const product = await Product.findByIdAndUpdate(
         id,
         { features: features },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
       if (!product) {
         res.status(404).json({ error: "Không tìm thấy sản phẩm" });
@@ -230,7 +231,7 @@ class ProductController {
       const product = await Product.findByIdAndUpdate(
         id,
         { certificates: certificates },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       if (!product) {
