@@ -11,4 +11,5 @@ router.delete("/:orderCode", OrderController.delete);
 router.delete("/id/:id", OrderController.deleteId);
 router.get("/user/:userId", OrderController.getProjectForOrder);
 router.get("/info/:userId", OrderController.getInfo);
+router.get("/filter/:id", OrderController.getFilterOrder);
 export default router;

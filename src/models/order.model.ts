@@ -14,7 +14,7 @@ export interface IOrder extends Document {
   paymentStatus?: string;
   expiredAt?: Date;
   linkthanhtoan?: string;
-  status: "pending" | "paid" | "shipped" | "cancelled";
+  status: "success" | "pending";
   createdAt: Date;
 }
 
@@ -42,7 +42,7 @@ const orderSchema: Schema<IOrder> = new Schema(
     linkthanhtoan: { type: String, required: false, default: null },
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "cancelled"],
+      enum: ["pending", "success"],
       default: "pending",
     },
     createdAt: {
@@ -50,7 +50,7 @@ const orderSchema: Schema<IOrder> = new Schema(
       default: () => new Date(),
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default (mongoose.models.Order ||

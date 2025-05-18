@@ -9,9 +9,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": ".", 
-   
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src/**/*.ts",

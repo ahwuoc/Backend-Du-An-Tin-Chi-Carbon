@@ -66,7 +66,7 @@ class OrderController {
         const orderData = new Order({
           orderCode: `MA_ORDER-${OrderBank.orderCode}`,
           amount: 1,
-          status: "paid",
+          status: "success",
           referralCode,
           buyerPhone,
           buyerAddress,
@@ -163,7 +163,7 @@ class OrderController {
       }
       const ordersWithPaymentStatus = orders.map((order) => ({
         ...order,
-        paymentStatus: order.paymentStatus ?? "unknown", // Xử lý trường hợp paymentStatus undefined
+        paymentStatus: order.paymentStatus ?? "unknown",
       }));
       const productIds = orders
         .map((order) => order.productId)
@@ -240,7 +240,6 @@ class OrderController {
     try {
       let orderCode = req.params.orderCode;
       orderCode = `MA_ORDER-${orderCode}`;
-      console.log(orderCode);
       const deletedOrder = await Order.findOneAndDelete({ orderCode });
       if (!deletedOrder) {
         res.status(404).json({ error: "Không tìm thấy đơn hàng để xoá" });
@@ -250,6 +249,26 @@ class OrderController {
       return;
     } catch (err) {
       res.status(500).json({ error: "Xoá đơn hàng thất bại", details: err });
+    }
+  }
+  async getFilterOrder(req: Request, res: Response) {
+    const userId = req.params.id;
+    const status = req.query.status as string | undefined;
+    if (!userId) {
+      res.status(404).json({ message: "Vui lòng gửi kèm uid" });
+      return;
+    }
+    const filter: any = { userId };
+    if (status) {
+      filter.status = status; // chỉ thêm status khi có
+    }
+    try {
+      const orders = await Order.find(filter);
+      res.status(200).json(orders);
+      return;
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi server", error });
+      return;
     }
   }
   async deleteId(req: Request, res: Response) {

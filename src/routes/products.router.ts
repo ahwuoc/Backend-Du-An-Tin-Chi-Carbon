@@ -14,5 +14,4 @@ router.put("/benefits/:id", productController.updateBenefits);
 router.put("/certificates/:id", productController.updateCertificates);
 router.delete("/:id", productController.deleteProduct);
 router.get("/free/trial", productController.getFreeTrialProduct);
-
 export default router;
