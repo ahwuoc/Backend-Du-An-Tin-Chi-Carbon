@@ -1,10 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IFeature {
-  id: string;
   title: string;
   description: string;
   icon: string;
+}
+interface IBenefits {
+  title: string;
 }
 
 interface IAccountManager {
@@ -23,10 +25,14 @@ interface ReportItem {
   url: string;
 }
 interface Certificate {
-  id: string;
   title: string;
   date: Date;
   url: string;
+}
+interface IUsageStats {
+  totalUsage: number;
+  lastMonthUsage: number;
+  trend: "up" | "down" | "stable";
 }
 export interface IProduct extends Document {
   name: string;
@@ -43,11 +49,8 @@ export interface IProduct extends Document {
   carbonUsed?: number;
   verificationStandard?: string;
   reports?: ReportItem[];
-  usageStats?: {
-    totalUsage: number;
-    lastMonthUsage: number;
-    trend: "up" | "down" | "stable";
-  };
+  benefits: IBenefits[];
+  usageStats?: IUsageStats[];
   features: IFeature[];
   subscriptionTier?: "basic" | "professional" | "enterprise";
   nextPayment?: Date;
@@ -84,6 +87,14 @@ const ProductSchema: Schema = new Schema(
       required: false,
       _id: true,
     },
+    benefits: {
+      type: [
+        {
+          title: { type: String, required: true },
+        },
+      ],
+      required: true,
+    },
     description: { type: String, required: true },
     purchaseDate: { type: Date, required: true },
     status: {
@@ -118,13 +129,13 @@ const ProductSchema: Schema = new Schema(
     features: {
       type: [
         {
-          id: { type: String, required: true },
           title: { type: String, required: true },
           description: { type: String, required: true },
           icon: { type: String, required: true },
         },
       ],
       required: false,
+      _id: true,
     },
     price: { type: Number, required: false },
     projectLocation: { type: String, required: false },
@@ -156,11 +167,11 @@ const ProductSchema: Schema = new Schema(
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
-    area: { type: Number, required: false }, // Thêm diện tích vào schema
+    area: { type: Number, required: false },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Product = mongoose.model<IProduct>("Product", ProductSchema);

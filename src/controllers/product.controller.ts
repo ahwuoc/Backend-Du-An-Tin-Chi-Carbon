@@ -148,6 +148,29 @@ class ProductController {
       res.status(500).json({ message: "Something went wrong!", error });
     }
   }
+  public async updateBenefits(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { benefits } = req.body;
+
+      if (!Array.isArray(benefits)) {
+        res.status(400).json({ error: "benefits phải là một mảng" });
+        return;
+      }
+      const product = await Product.findByIdAndUpdate(
+        id,
+        { benefits },
+        { new: true, runValidators: true },
+      );
+      if (!product) {
+        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        return;
+      }
+      res.status(200).json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+    }
+  }
   public async updateTimeline(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
