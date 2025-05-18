@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Product, type IProduct } from "../models/products.model";
+import { Types } from "mongoose";
 
 class ProductController {
   public async getFreeTrialProduct(req: Request, res: Response): Promise<void> {
@@ -114,7 +115,12 @@ class ProductController {
 
   public async updateProduct(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id;
+      if (!Types.ObjectId.isValid(id)) {
+        res.status(400).json({ error: "Invalid product id" });
+        return;
+      }
+
       const updateData: Partial<IProduct> = req.body;
       if (updateData.purchaseDate)
         updateData.purchaseDate = new Date(updateData.purchaseDate);
@@ -125,10 +131,11 @@ class ProductController {
       if (updateData.lastAccessed)
         updateData.lastAccessed = new Date(updateData.lastAccessed);
 
-      const product = await Product.findOneAndUpdate({ id }, updateData, {
-        new: true,
-        runValidators: true,
-      });
+      const product = await Product.findOneAndUpdate(
+        { _id: new Types.ObjectId(id) },
+        updateData,
+        { new: true, runValidators: true }
+      );
 
       if (!product) {
         res.status(404).json({ error: "Không tìm thấy sản phẩm" });
