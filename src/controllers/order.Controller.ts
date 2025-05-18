@@ -49,7 +49,7 @@ class OrderController {
       const referralCode = affiliate?.referralCode || null;
 
       const OrderBank = {
-        orderCode: Date.now(),
+        orderCode: Date.now().toString(),
         amount,
         description: "Thanh toán vui vẻ",
         buyerName,
