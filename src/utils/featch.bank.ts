@@ -1,33 +1,56 @@
 import crypto from "crypto";
 import axios from "axios";
-
-const CLIENT_ID = "5c0c22e2-b45f-4dcc-85dd-6a366a44c7d6";
-const API_KEY = "446cfd67-a5aa-45f2-86d2-1a3908dffb13";
-const CHECKSUM_KEY =
-  "861a796606578362e119f3f83192035c9390c43b1c46d91b0fddee17deef9ef6";
+interface Order {
+  amount: number;
+  orderCode: string;
+  description: string;
+  [key: string]: any;
+}
+const CLIENT_ID = process.env.PAYOS_CLIENT_ID!;
+const API_KEY = process.env.PAYOS_API_KEY!;
+const CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY!;
 
 const currentTime = Math.floor(Date.now() / 1000);
 const expiredAt = currentTime + 3600;
-
-export async function createOrder(order: any): Promise<any> {
+function createSignature(
+  order: any,
+  cancelUrl: string,
+  returnUrl: string,
+): string {
+  const rawSignature = `amount=${order.amount}&cancelUrl=${cancelUrl}&description=${order.description}&orderCode=${order.orderCode}&returnUrl=${returnUrl}`;
+  return crypto
+    .createHmac("sha256", CHECKSUM_KEY)
+    .update(rawSignature)
+    .digest("hex");
+}
+export async function createOrder(order: Order): Promise<any> {
   const baseUrl = process.env.FRONT_END_URL ?? "http://localhost:3000";
   const cancelUrl = `${baseUrl}/huy-don`;
   const returnUrl = `${baseUrl}/hoan-thanh`;
+
+  // Bắt lỗi nếu thiếu dữ liệu quan trọng
+  if (!order.amount || !order.orderCode || !order.description) {
+    throw new Error("Thiếu thông tin bắt buộc của order");
+  }
+
+  // Tính thời gian hết hạn chính xác khi tạo đơn
+  const currentTime = Math.floor(Date.now() / 1000);
+  const expiredAt = currentTime + 3600; // 1 tiếng sau
+
+  // Tạo chữ ký bảo mật
+  const signature = createSignature(order, cancelUrl, returnUrl);
+
+  // Payload gửi lên API
+  const payload = {
+    ...order,
+    expiredAt,
+    cancelUrl,
+    returnUrl,
+    signature,
+  };
+
   try {
-    const rawSignature = `amount=${order.amount}&cancelUrl=${cancelUrl}&description=${order.description}&orderCode=${order.orderCode}&returnUrl=${returnUrl}`;
-    const signature = crypto
-      .createHmac("sha256", CHECKSUM_KEY)
-      .update(rawSignature)
-      .digest("hex");
-
-    const payload = {
-      ...order,
-      expiredAt,
-      cancelUrl,
-      returnUrl,
-      signature,
-    };
-
+    // Gọi API PayOS tạo đơn
     const response = await axios.post(
       "https://api-merchant.payos.vn/v2/payment-requests",
       payload,
@@ -37,17 +60,18 @@ export async function createOrder(order: any): Promise<any> {
           "x-client-id": CLIENT_ID,
           "x-api-key": API_KEY,
         },
-      }
+      },
     );
-
-    return response.data;
+    return response.data; // Trả về dữ liệu thành công
   } catch (error: any) {
+    // Log lỗi chi tiết cho dev debug
     console.error(
       "❌ PayOS trả về lỗi:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
+    // Throw lại lỗi để caller biết
     throw new Error(
-      `Error from PayOS: ${error.response?.data || error.message}`
+      `Error from PayOS: ${error.response?.data || error.message}`,
     );
   }
 }
@@ -65,7 +89,7 @@ export async function getOrderPaymentInfo(orderId: string): Promise<any> {
   } catch (error: any) {
     console.error(
       "Lỗi khi lấy thông tin link thanh toán:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw new Error("Có lỗi xảy ra khi lấy thông tin");
   }
