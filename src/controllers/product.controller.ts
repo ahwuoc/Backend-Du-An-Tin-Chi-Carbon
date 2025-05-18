@@ -98,7 +98,6 @@ class ProductController {
           .json({ error: "Thiếu các trường bắt buộc cho products" });
         return;
       }
-      productData.purchaseDate = new Date(productData.purchaseDate!);
       if (productData.expiryDate)
         productData.expiryDate = new Date(productData.expiryDate);
       if (productData.nextPayment)

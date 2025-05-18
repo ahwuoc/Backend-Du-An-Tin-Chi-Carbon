@@ -38,7 +38,6 @@ export interface IProduct extends Document {
   name: string;
   type: "carbon_credits" | "carbon_accounting" | "international_certificates";
   description: string;
-  purchaseDate: Date;
   status: "active" | "pending" | "expired";
   expiryDate?: Date;
   image?: string;
@@ -96,7 +95,6 @@ const ProductSchema: Schema = new Schema(
       required: true,
     },
     description: { type: String, required: true },
-    purchaseDate: { type: Date, required: false },
     status: {
       type: String,
       enum: ["active", "pending", "expired"],
