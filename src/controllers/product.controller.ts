@@ -93,7 +93,9 @@ class ProductController {
         !productData.description ||
         !productData.status
       ) {
-        res.status(400).json({ error: "Thiếu các trường bắt buộc" });
+        res
+          .status(400)
+          .json({ error: "Thiếu các trường bắt buộc cho products" });
         return;
       }
       productData.purchaseDate = new Date(productData.purchaseDate!);
@@ -103,7 +105,6 @@ class ProductController {
         productData.nextPayment = new Date(productData.nextPayment);
       if (productData.lastAccessed)
         productData.lastAccessed = new Date(productData.lastAccessed);
-
       const product = new Product(productData);
       await product.save();
       res.status(201).json(product);
