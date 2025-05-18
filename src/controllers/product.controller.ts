@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { Types } from "mongoose";
-import { Product } from "src/models/products.model";
-import { IProduct } from "src/models/products.model";
+import { Product, type IProduct } from "../models/products.model";
+
 class ProductController {
   public async getFreeTrialProduct(req: Request, res: Response): Promise<void> {
     try {

@@ -1,4 +1,3 @@
-// Import thư viện cần thiết
 import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -49,7 +48,7 @@ app.set("trust proxy", 1);
     cors({
       origin: true,
       credentials: true,
-    })
+    }),
   );
 
   // Middleware log tất cả request
