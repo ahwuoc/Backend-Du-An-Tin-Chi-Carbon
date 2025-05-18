@@ -226,12 +226,31 @@ class OrderController {
         "productId",
       );
 
-      const totalAmount = orders.reduce((acc, order) => {
-        return acc + (order.amount || 0);
-      }, 0);
+      const pendingOrders = orders.filter(
+        (order) => order.status === "pending",
+      );
+      const successOrders = orders.filter(
+        (order) => order.status === "success",
+      );
 
-      res.json({ orders, totalAmount });
-      return;
+      const totalPendingAmount = pendingOrders.reduce(
+        (acc, order) => acc + (order.amount || 0),
+        0,
+      );
+      const totalSuccessAmount = successOrders.reduce(
+        (acc, order) => acc + (order.amount || 0),
+        0,
+      );
+      res.json({
+        totalOrders: orders.length,
+        totalAmount: totalPendingAmount + totalSuccessAmount,
+        totalPendingOrders: pendingOrders.length,
+        totalSuccessOrders: successOrders.length,
+        totalPendingAmount,
+        totalSuccessAmount,
+        pendingOrders,
+        successOrders,
+      });
     } catch (err) {
       res.status(500).json({ message: "Lỗi server", error: err });
     }
