@@ -52,7 +52,7 @@ export interface IProduct extends Document {
   benefits: IBenefits[];
   usageStats?: IUsageStats[];
   features: IFeature[];
-  subscriptionTier?: "basic" | "professional" | "enterprise";
+  subscriptionTier?: "free" | "expert" | "research" | "enterprise";
   nextPayment?: Date;
   certificationLevel?: string;
   courseProgress?: number;
@@ -153,7 +153,7 @@ const ProductSchema: Schema = new Schema(
     },
     subscriptionTier: {
       type: String,
-      enum: ["basic", "professional", "enterprise"],
+      enum: ["free", "expert", "research", "enterprise"],
       required: false,
     },
     nextPayment: { type: Date, required: false },

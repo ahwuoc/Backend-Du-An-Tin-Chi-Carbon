@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { Product, type IProduct } from "../models/products.model";
 import { Types } from "mongoose";
-
+import { Product } from "src/models/products.model";
+import { IProduct } from "src/models/products.model";
 class ProductController {
   public async getFreeTrialProduct(req: Request, res: Response): Promise<void> {
     try {
@@ -86,7 +86,7 @@ class ProductController {
   public async createProduct(req: Request, res: Response): Promise<void> {
     try {
       console.log("data =>", req.body);
-      const productData: Partial<IProduct> = req.body;
+      const productData: IProduct = req.body;
       if (
         !productData.name ||
         !productData.type ||
