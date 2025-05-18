@@ -120,8 +120,6 @@ class ProductController {
         return;
       }
       const updateData: Partial<IProduct> = req.body;
-      if (updateData.purchaseDate)
-        updateData.purchaseDate = new Date(updateData.purchaseDate);
       if (updateData.expiryDate)
         updateData.expiryDate = new Date(updateData.expiryDate);
       if (updateData.nextPayment)
