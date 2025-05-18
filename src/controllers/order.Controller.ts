@@ -218,7 +218,6 @@ class OrderController {
         .json({ error: "Cập nhật đơn hàng thất bại", details: err });
     }
   }
-
   async getInfo(req: Request, res: Response) {
     const userId = req.params.userId;
     try {
