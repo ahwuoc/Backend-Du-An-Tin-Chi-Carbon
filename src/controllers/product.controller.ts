@@ -91,7 +91,6 @@ class ProductController {
         !productData.name ||
         !productData.type ||
         !productData.description ||
-        !productData.purchaseDate ||
         !productData.status
       ) {
         res.status(400).json({ error: "Thiếu các trường bắt buộc" });

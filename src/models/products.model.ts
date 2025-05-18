@@ -51,7 +51,7 @@ export interface IProduct extends Document {
   reports?: ReportItem[];
   benefits: IBenefits[];
   usageStats?: IUsageStats[];
-  features: IFeature[];
+  features?: IFeature[];
   subscriptionTier?: "free" | "expert" | "research" | "enterprise";
   nextPayment?: Date;
   certificationLevel?: string;
@@ -96,7 +96,7 @@ const ProductSchema: Schema = new Schema(
       required: true,
     },
     description: { type: String, required: true },
-    purchaseDate: { type: Date, required: true },
+    purchaseDate: { type: Date, required: false },
     status: {
       type: String,
       enum: ["active", "pending", "expired"],
