@@ -44,8 +44,8 @@ export interface IProduct extends Document {
   price?: number;
   billingCycle: string;
   projectLocation?: string;
-  carbonAmount?: number;
-  carbonUsed?: number;
+  totalCredits?: number;
+  usedCredits?: number;
   verificationStandard?: string;
   reports?: ReportItem[];
   benefits: IBenefits[];
@@ -137,8 +137,8 @@ const ProductSchema: Schema = new Schema(
     },
     price: { type: Number, required: false },
     projectLocation: { type: String, required: false },
-    carbonAmount: { type: Number, required: false },
-    carbonUsed: { type: Number, required: false },
+    totalCredits: { type: Number, required: false },
+    usedCredits: { type: Number, required: false },
     verificationStandard: { type: String, required: false },
     usageStats: {
       totalUsage: { type: Number, required: false },

@@ -11,7 +11,6 @@ router.put("/timelines/:id", productController.updateTimeline);
 router.put("/reports/:id", productController.updateReports);
 router.put("/features/:id", productController.updateFeatures);
 router.put("/benefits/:id", productController.updateBenefits);
-
 router.put("/certificates/:id", productController.updateCertificates);
 router.delete("/:id", productController.deleteProduct);
 router.get("/free/trial", productController.getFreeTrialProduct);
