@@ -20,12 +20,12 @@ class OrderController {
         productId,
         userId,
         buyerAddress,
-        status,
-        nameItem,
       } = req.body;
+
+      // Check missing fields
       const missingFields = Object.entries(req.body)
         .filter(
-          ([_, value]) => value === undefined || value === null || value === ""
+          ([, value]) => value === undefined || value === null || value === "",
         )
         .map(([key]) => key);
 
@@ -40,27 +40,32 @@ class OrderController {
       const product = await Product.findById(productId);
       if (!product) {
         res.status(400).json({
-          error: `Sản phẩm không tồn tại`,
+          error: "Sản phẩm không tồn tại",
         });
         return;
       }
+
       const affiliate = await Affiliate.findOne({ userId });
       const referralCode = affiliate?.referralCode || null;
+
       const OrderBank = {
         orderCode: Date.now(),
-        amount: amount,
+        amount,
         description: "Thanh toán vui vẻ",
-        buyerName: buyerName,
+        buyerName,
         buyerEmail: email,
-        buyerPhone: buyerPhone,
-        buyerAddress: buyerAddress,
+        buyerPhone,
+        buyerAddress,
       };
-      if (product.price === 0) {
+
+      // FREE PRODUCT
+      if (product.subscriptionTier === "free") {
         const mailContent = sendMailRegisterCheckout(OrderBank);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
+
         const orderData = new Order({
           orderCode: `MA_ORDER-${OrderBank.orderCode}`,
-          amount: product.price + 1,
+          amount: 1,
           status: "paid",
           referralCode,
           buyerPhone,
@@ -74,51 +79,66 @@ class OrderController {
           linkthanhtoan: null,
           expiredAt: null,
         });
+
         console.log("Saving order:", orderData);
         await orderData.save();
         console.log("Order saved successfully:", orderData.orderCode);
+
         res.status(201).json(orderData);
+        return;
       }
+
+      // PAID PRODUCT
       const response = await createOrder(OrderBank);
+
       if (response.code === "00") {
         const mailContent = sendMailRegisterCheckout(OrderBank);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
+
         if (!emailResult.success) {
           console.error("Email failed:", emailResult.error);
         } else {
           console.log("Email sent successfully to:", email);
         }
+
         const orderData = new Order({
           orderCode: `MA_ORDER-${response.data.orderCode}`,
           amount: response.data.amount + 1,
           linkthanhtoan: response.data.checkoutUrl,
           status: "pending",
-          referralCode: referralCode,
-          buyerPhone: buyerPhone,
-          buyerAddress: buyerAddress,
+          referralCode,
+          buyerPhone,
+          buyerAddress,
           buyerEmail: email,
           paymentLinkId: response.data.paymentLinkId,
           productId: new mongoose.Types.ObjectId(productId),
           expiredAt: response.data.expiredAt,
           userId: new mongoose.Types.ObjectId(userId),
           createdAt: new Date(),
-          buyerName: buyerName,
+          buyerName,
         });
+
         console.log("Saving order:", orderData);
         await orderData.save();
         console.log("Order saved successfully:", orderData.orderCode);
+
         res.status(201).json(orderData);
-      } else {
-        console.error("Payment system error:", response);
-        res
-          .status(500)
-          .json({ error: "Lỗi khi gửi đơn hàng tới hệ thống thanh toán." });
+        return;
       }
+
+      // Nếu code khác "00"
+      console.error("Payment system error:", response);
+      res.status(500).json({
+        error: "Lỗi khi gửi đơn hàng tới hệ thống thanh toán.",
+      });
+      return;
     } catch (err: any) {
       console.error("Create order failed:", err.message);
-      res
-        .status(400)
-        .json({ error: "Tạo đơn hàng thất bại", details: err.message });
+      res.status(400).json({
+        error: "Tạo đơn hàng thất bại",
+        details: err.message,
+      });
+      return;
     }
   }
 
@@ -203,7 +223,7 @@ class OrderController {
     const userId = req.params.userId;
     try {
       const orders: IOrder[] = await Order.find({ userId }).populate(
-        "productId"
+        "productId",
       );
 
       const totalAmount = orders.reduce((acc, order) => {
