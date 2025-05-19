@@ -107,14 +107,8 @@ class ProjectController {
   async getUserProfileProject(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-      console.log(req.params);
       const projects = await Project.find({ userId });
-      const activeCount = projects.filter((p) => p.status === "active").length;
-      res.json({
-        total: projects.length,
-        active: activeCount,
-        projects,
-      });
+      res.json(projects);
     } catch (err) {
       res.status(500).json({ error: "Server error", details: err });
     }
