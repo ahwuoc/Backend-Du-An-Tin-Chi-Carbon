@@ -251,6 +251,7 @@ class AuthController {
   ): Promise<void> {
     const googleAccessToken = req.params.access_token;
     if (!googleAccessToken) {
+      console.warn("❌ Không có access_token trong params");
       res.status(400).json({
         success: false,
         error: "Google access token không được cung cấp.",
@@ -259,7 +260,7 @@ class AuthController {
     }
 
     try {
-      console.log("📡 Đang gọi Google API để lấy thông tin người dùng...");
+      console.log("📡 Gọi Google API để lấy thông tin người dùng...");
       const userInfoResponse = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
@@ -270,7 +271,10 @@ class AuthController {
       );
 
       const googleUserData = userInfoResponse.data;
+      console.log("✅ Dữ liệu người dùng Google:", googleUserData);
+
       if (!googleUserData || !googleUserData.email) {
+        console.warn("❌ Thiếu email hoặc không lấy được thông tin người dùng");
         res.status(400).json({
           success: false,
           error:
@@ -278,11 +282,15 @@ class AuthController {
         });
         return;
       }
+
       let user = await this.userModel.findOne({
         email: googleUserData.email,
       });
+
       let isNewUser = false;
+
       if (!user) {
+        console.log("🆕 Người dùng chưa tồn tại, tiến hành tạo mới...");
         const randomPassword = Math.random().toString(36).slice(-8) + "G!";
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
         user = await this.userModel.create({
@@ -295,34 +303,45 @@ class AuthController {
           provider: "google",
         });
         isNewUser = true;
+        console.log("✅ Người dùng mới đã được tạo:", user.email);
       } else {
         let changed = false;
-        if (user.avatar && googleUserData.picture) {
+        if (user.avatar !== googleUserData.picture) {
           user.avatar = googleUserData.picture;
           changed = true;
         }
+
         if (changed) {
+          console.log("🔄 Avatar người dùng đã được cập nhật.");
           await user.save();
+        } else {
+          console.log("👤 Người dùng đã tồn tại, không thay đổi gì.");
         }
       }
+
       const userPayloadForToken = {
         userId: user!._id.toString(),
         email: user!.email,
         role: user!.role,
         name: user!.name,
       };
+
       const token = this.createToken(userPayloadForToken, JWT_EXPIRES_IN);
+      console.log("🔐 Token đã được tạo thành công.");
+
       res.cookie("token", token, {
         httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
       });
+
       res.status(isNewUser ? 201 : 200).json({
         success: true,
         token,
       });
     } catch (error: any) {
+      console.error("💥 Lỗi trong quá trình xử lý đăng nhập Google:", error);
       res.status(500).json({
         success: false,
         error: "Lỗi hệ thống khi xử lý đăng nhập Google.",
