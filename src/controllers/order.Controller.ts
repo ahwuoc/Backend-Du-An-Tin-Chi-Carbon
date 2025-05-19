@@ -48,10 +48,9 @@ class OrderController {
       const affiliate = await Affiliate.findOne({ userId });
       const referralCode = affiliate?.referralCode || null;
 
-      const orderCode = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
-
+      const orderCodeStr = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
       const OrderBank = {
-        orderCode: orderCode,
+        orderCode: orderCodeStr,
         amount,
         description: "Thanh toán vui vẻ",
         buyerName,
