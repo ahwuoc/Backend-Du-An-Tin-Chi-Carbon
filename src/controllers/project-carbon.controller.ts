@@ -114,6 +114,7 @@ export default class ProjectCarbonController {
       console.error("Error creating project:", error);
       if (error.name === "ValidationError") {
         res.status(400).json({ message: error.message });
+        return;
       } else {
         res
           .status(500)
