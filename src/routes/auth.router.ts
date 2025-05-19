@@ -14,6 +14,7 @@ import {
   validationResult,
   type ValidationChain,
 } from "express-validator";
+import { authenticate } from "../middleware/authMiddleware";
 
 interface RequestAuthentication extends Request {
   user?: { id: string; email: string; role: string };
@@ -25,7 +26,7 @@ const authController = new AuthController();
 const handleValidationErrors = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   // Thêm kiểu trả về : void
   const errors = validationResult(req);
@@ -123,7 +124,7 @@ const validateUpdateUser: (ValidationChain | RequestHandler)[] = [
 const limitRequest = (
   message: string,
   windowMs: number = 15 * 60 * 1000,
-  maxRequests: number = 5
+  maxRequests: number = 5,
 ): RequestHandler => {
   return rateLimit({
     windowMs,
@@ -149,45 +150,45 @@ router.post(
   "/register",
   limitRequest(rateLimitMessages.register, 60 * 60 * 1000, 100),
   validateRegistration,
-  authController.register.bind(authController)
+  authController.register.bind(authController),
 );
 
 router.post(
   "/login",
   limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
   validateLogin,
-  authController.login.bind(authController)
+  authController.login.bind(authController),
 );
 
 router.get(
   "/login/email/:access_token",
-  authController.LoginEmailAuth.bind(authController)
+  authController.LoginEmailAuth.bind(authController),
 );
 
 router.post(
   "/logout",
   authController.authenticate.bind(authController),
-  authController.logout.bind(authController)
+  authController.logout.bind(authController),
 );
 
 router.post(
   "/forgot-password",
   limitRequest(rateLimitMessages.forgotPassword, 60 * 60 * 1000, 5),
   validateForgotPassword,
-  authController.forgotPassword.bind(authController)
+  authController.forgotPassword.bind(authController),
 );
 
 router.post(
   "/reset-password",
   validateResetPassword,
-  authController.resetPassword.bind(authController)
+  authController.resetPassword.bind(authController),
 );
 
 router.post(
   "/change-password",
   authController.authenticate.bind(authController),
   validateChangePassword,
-  authController.changePassword.bind(authController)
+  authController.changePassword.bind(authController),
 );
 router.get(
   "/users/me",
@@ -202,19 +203,19 @@ router.get(
       message: "Không tìm thấy thông tin người dùng.",
     });
     // return; // Có thể thêm return ở đây hoặc để hàm tự kết thúc
-  }
+  },
 );
 
 router.put(
   "/users/update",
   authController.authenticate.bind(authController),
   validateUpdateUser,
-  authController.changeUser.bind(authController)
+  authController.changeUser.bind(authController),
 );
 const requireAdmin: RequestHandler = (
   req: RequestAuthentication,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   // Thêm kiểu trả về : void (hoặc để TypeScript tự suy luận nếu thân hàm đúng)
   if (req.user && req.user.role === "admin") {
@@ -230,11 +231,15 @@ const requireAdmin: RequestHandler = (
 router.get("/users", authController.getAllUser.bind(authController));
 router.delete("/:id", authController.deleteUserById.bind(authController));
 
+router.get(
+  "/user/infor-manger/:id",
+  authController.getManagerInfor.bind(authController),
+);
 const globalErrorHandler: ErrorRequestHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   console.error("🚨 GLOBAL ERROR HANDLER CAUGHT:", err.stack || err);
   if (res.headersSent) {

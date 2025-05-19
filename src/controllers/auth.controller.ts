@@ -6,6 +6,9 @@ import { sendEmail } from "../utils/sendEmail";
 import { resetPasswordContent } from "../utils/emailTemplates";
 import { UserModel } from "../models/users.model";
 import axios from "axios";
+import { Product } from "../models/products.model";
+import { ProjectMember } from "../models/project-member.router";
+import { Project } from "../models/project.model";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
@@ -22,7 +25,7 @@ interface RequestAuthentication extends Request {
 type ExpressHandler = (
   req: RequestAuthentication,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => Promise<void> | void;
 
 class AuthController {
@@ -30,14 +33,14 @@ class AuthController {
 
   private createToken(
     payload: object,
-    expiresIn: string = JWT_EXPIRES_IN
+    expiresIn: string = JWT_EXPIRES_IN,
   ): string {
     return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
   }
 
   private async handleUserExistenceAndPasswordHashing(
     email: string,
-    password: string
+    password: string,
   ): Promise<string> {
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
@@ -67,10 +70,26 @@ class AuthController {
     }
   }
 
+  async getManagerInfor(req: Request, res: Response) {
+    try {
+      const userId = req.params.id;
+      const products = await Product.find({ userId });
+      const memberships = await ProjectMember.find({ userId });
+      const projectIds = memberships.map((m) => m.projectId);
+      const projects = await Project.find({ _id: { $in: projectIds } });
+      res.json({
+        products,
+        projects,
+      });
+    } catch (error) {
+      console.error("Error in getManagerInfor:", error);
+      res.status(500).json({ error: "Server error", details: error });
+    }
+  }
   public async getAllUser(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     try {
       const users = await this.userModel.find().select("-password").lean();
@@ -87,7 +106,7 @@ class AuthController {
   public async changeUser(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     try {
       const { _id, name, email, avatar, phone, address, role } = req.body;
@@ -101,7 +120,7 @@ class AuthController {
         .findByIdAndUpdate(
           _id,
           { name, email, avatar, phone, address, role },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         )
         .select("-password");
 
@@ -227,7 +246,7 @@ class AuthController {
   public async LoginEmailAuth(
     req: RequestAuthentication,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const googleAccessToken = req.params.access_token;
     if (!googleAccessToken) {
@@ -246,7 +265,7 @@ class AuthController {
           headers: {
             Authorization: `Bearer ${googleAccessToken}`,
           },
-        }
+        },
       );
 
       const googleUserData = userInfoResponse.data;
@@ -456,7 +475,7 @@ class AuthController {
       const updatedUser = await this.userModel.findByIdAndUpdate(
         decoded.userId,
         { password: hashedPassword },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedUser) {
@@ -541,7 +560,7 @@ class AuthController {
 
       const isOldPasswordValid = await bcrypt.compare(
         oldPassword,
-        user.password
+        user.password,
       );
       if (!isOldPasswordValid) {
         res
