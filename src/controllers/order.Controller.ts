@@ -87,20 +87,15 @@ class OrderController {
         res.status(201).json(orderData);
         return;
       }
-
-      // PAID PRODUCT
       const response = await createOrder(OrderBank);
-
       if (response.code === "00") {
         const mailContent = sendMailRegisterCheckout(OrderBank);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
-
         if (!emailResult.success) {
           console.error("Email failed:", emailResult.error);
         } else {
           console.log("Email sent successfully to:", email);
         }
-
         const orderData = new Order({
           orderCode: `MA_ORDER-${response.data.orderCode}`,
           amount: response.data.amount + 1,
@@ -125,8 +120,6 @@ class OrderController {
         res.status(201).json(orderData);
         return;
       }
-
-      // Nếu code khác "00"
       console.error("Payment system error:", response);
       res.status(500).json({
         error: "Lỗi khi gửi đơn hàng tới hệ thống thanh toán.",

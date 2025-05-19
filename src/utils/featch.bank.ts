@@ -33,14 +33,11 @@ export async function createOrder(order: Order): Promise<any> {
     throw new Error("Thiếu thông tin bắt buộc của order");
   }
 
-  // Tính thời gian hết hạn chính xác khi tạo đơn
   const currentTime = Math.floor(Date.now() / 1000);
-  const expiredAt = currentTime + 3600; // 1 tiếng sau
+  const expiredAt = currentTime + 3600;
 
-  // Tạo chữ ký bảo mật
   const signature = createSignature(order, cancelUrl, returnUrl);
 
-  // Payload gửi lên API
   const payload = {
     ...order,
     expiredAt,
@@ -49,8 +46,10 @@ export async function createOrder(order: Order): Promise<any> {
     signature,
   };
 
+  // 👉 Log payload gửi đi
+  console.log("📦 Payload gửi đến PayOS:", payload);
+
   try {
-    // Gọi API PayOS tạo đơn
     const response = await axios.post(
       "https://api-merchant.payos.vn/v2/payment-requests",
       payload,
@@ -62,14 +61,16 @@ export async function createOrder(order: Order): Promise<any> {
         },
       },
     );
-    return response.data; // Trả về dữ liệu thành công
+
+    // ✅ Log response nhận về
+    console.log("✅ Phản hồi từ PayOS:", response.data);
+    return response.data;
   } catch (error: any) {
-    // Log lỗi chi tiết cho dev debug
+    // ❌ Log lỗi chi tiết
     console.error(
       "❌ PayOS trả về lỗi:",
       error.response?.data || error.message,
     );
-    // Throw lại lỗi để caller biết
     throw new Error(
       `Error from PayOS: ${error.response?.data || error.message}`,
     );
