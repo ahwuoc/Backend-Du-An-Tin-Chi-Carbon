@@ -3,6 +3,7 @@ import { ProjectCarbon } from "../models/project-carbon.model";
 import { Types } from "mongoose";
 import { param } from "express-validator";
 import { Project } from "../models/project.model";
+import { ProjectMember } from "../models/project-member.router";
 
 interface ProjectCarbonInputData {
   name: string;
@@ -43,8 +44,8 @@ export default class ProjectCarbonController {
   static async createProjectCarbon(req: Request, res: Response): Promise<void> {
     try {
       console.log("data =>=========>", req.body);
-      const bodyData = req.body as ProjectCarbonInputData;
       const {
+        projectId,
         userId,
         name,
         organization,
@@ -54,7 +55,7 @@ export default class ProjectCarbonController {
         projectType,
         additionalInfo,
         details,
-      } = bodyData;
+      } = req.body;
 
       const files = req.files as
         | { [fieldname: string]: Express.Multer.File[] }
@@ -91,30 +92,34 @@ export default class ProjectCarbonController {
         kmlFile: kmlFilePath,
       };
 
-      if (
-        newProjectData.details?.riceStartDate &&
-        typeof newProjectData.details.riceStartDate === "string"
-      ) {
+      // Parse date nếu là string
+      if (typeof newProjectData.details?.riceStartDate === "string") {
         newProjectData.details.riceStartDate = new Date(
           newProjectData.details.riceStartDate,
         );
       }
-      if (
-        newProjectData.details?.riceEndDate &&
-        typeof newProjectData.details.riceEndDate === "string"
-      ) {
+      if (typeof newProjectData.details?.riceEndDate === "string") {
         newProjectData.details.riceEndDate = new Date(
           newProjectData.details.riceEndDate,
         );
       }
 
       const project = await ProjectCarbon.create(newProjectData);
+
+      await ProjectMember.create({
+        userId,
+        projectId, // lấy từ client gửi lên
+        role: "member", // hoặc để client chọn
+        status: "approved",
+        joinedAt: new Date(),
+        approvedAt: new Date(),
+        approvedBy: userId, // tự duyệt luôn
+      });
       res.status(201).json(project);
     } catch (error: any) {
       console.error("Error creating project:", error);
       if (error.name === "ValidationError") {
         res.status(400).json({ message: error.message });
-        return;
       } else {
         res
           .status(500)
@@ -122,7 +127,6 @@ export default class ProjectCarbonController {
       }
     }
   }
-
   static async getProjectByUser(req: Request, res: Response) {
     const userId = req.params.id;
     if (!userId) {
