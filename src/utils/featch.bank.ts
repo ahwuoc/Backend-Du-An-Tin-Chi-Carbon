@@ -6,7 +6,7 @@ dotenv.config();
 
 interface Order {
   amount: number;
-  orderCode: string;
+  orderCode: number;
   description: string;
   [key: string]: any;
 }
