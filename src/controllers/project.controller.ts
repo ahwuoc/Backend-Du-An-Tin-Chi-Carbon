@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Project } from "../models/project.model";
+import { ProjectMember } from "../models/project-member.router";
 class ProjectController {
   async createProject(req: Request, res: Response) {
     try {
@@ -107,7 +108,9 @@ class ProjectController {
   async getUserProfileProject(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-      const projects = await Project.find({ userId });
+      const memberships = await ProjectMember.find({ userId });
+      const projectIds = memberships.map((m) => m.projectId);
+      const projects = await Project.find({ _id: { $in: projectIds } });
       res.json(projects);
     } catch (err) {
       res.status(500).json({ error: "Server error", details: err });
