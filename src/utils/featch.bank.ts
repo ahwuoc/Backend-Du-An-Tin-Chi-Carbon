@@ -86,22 +86,3 @@ export async function getOrderPaymentInfo(orderId: string): Promise<any> {
     throw new Error("Có lỗi xảy ra khi lấy thông tin thanh toán");
   }
 }
-
-export async function getOrderPaymentInfo(orderId: string): Promise<any> {
-  try {
-    const url = `https://api-merchant.payos.vn/v2/payment-requests/${orderId}`;
-    const response = await axios.get(url, {
-      headers: {
-        "x-client-id": CLIENT_ID,
-        "x-api-key": API_KEY,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error(
-      "Lỗi khi lấy thông tin link thanh toán:",
-      error.response?.data || error.message,
-    );
-    throw new Error("Có lỗi xảy ra khi lấy thông tin");
-  }
-}
