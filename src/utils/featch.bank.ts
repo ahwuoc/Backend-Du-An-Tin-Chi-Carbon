@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 interface Order {
   amount: number;
   orderCode: string;
