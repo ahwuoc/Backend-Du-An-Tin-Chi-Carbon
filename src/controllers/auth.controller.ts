@@ -9,7 +9,7 @@ import axios from "axios";
 import { Product } from "../models/products.model";
 import { ProjectMember } from "../models/project-member.router";
 import { Project } from "../models/project.model";
-
+import Order from "../models/order.model";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
@@ -73,12 +73,13 @@ class AuthController {
   async getManagerInfor(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-      const products = await Product.find({ userId });
+
+      const orders = await Order.find({ userId });
       const memberships = await ProjectMember.find({ userId });
       const projectIds = memberships.map((m) => m.projectId);
       const projects = await Project.find({ _id: { $in: projectIds } });
       res.json({
-        products,
+        orders,
         projects,
       });
     } catch (error) {
