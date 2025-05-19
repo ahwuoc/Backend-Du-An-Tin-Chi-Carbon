@@ -75,6 +75,29 @@ class ProjectController {
     }
   }
 
+  public async updateDocuments(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { documents } = req.body;
+
+      if (!Array.isArray(documents)) {
+        res.status(400).json({ error: "activity phải là một mảng" });
+        return;
+      }
+      const product = await Project.findByIdAndUpdate(
+        id,
+        { documents },
+        { new: true, runValidators: true },
+      );
+      if (!product) {
+        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+        return;
+      }
+      res.status(200).json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+    }
+  }
   public async updateActivities(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;

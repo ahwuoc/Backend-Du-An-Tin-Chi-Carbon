@@ -9,4 +9,5 @@ router.get("/", projectController.getAllProjects);
 router.get("/:id", projectController.getProjectById);
 router.get("/profile/:id", projectController.getUserProfileProject);
 router.put("/activities/:id", projectController.updateActivities);
+router.put("/documents/:id", projectController.updateDocuments);
 export default router;

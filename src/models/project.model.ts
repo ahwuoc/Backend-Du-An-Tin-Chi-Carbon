@@ -9,6 +9,13 @@ export interface ICoordinates {
   lat: number;
   lng: number;
 }
+export interface IProjectDocument {
+  name: string;
+  url: string;
+  type?: string;
+  uploadedAt?: string;
+  userId?: string;
+}
 
 export interface IProject {
   _id?: string;
@@ -27,7 +34,7 @@ export interface IProject {
   area?: number;
   participants?: string[];
   progress?: number;
-  documents?: string[];
+  documents?: IProjectDocument;
   activities?: IActivity[];
   userId: string;
   createdAt?: string;
@@ -42,6 +49,15 @@ const ProjectSchema = new Schema(
       enum: ["pending", "active", "completed", "archived"],
       default: "pending",
     },
+    documents: [
+      {
+        name: { type: String, required: true },
+        url: { type: String, required: true },
+        type: { type: String },
+        uploadedAt: { type: Date, default: Date.now },
+        userId: { type: Types.ObjectId, ref: "User" },
+      },
+    ],
     registrationDate: { type: Date },
     startDate: { type: Date },
     endDate: { type: Date },
@@ -57,7 +73,6 @@ const ProjectSchema = new Schema(
     area: { type: Number }, // đơn vị m² hoặc ha
     participants: [{ type: String }], // hoặc ref tới User nếu cần
     progress: { type: Number, min: 0, max: 100 },
-    documents: [{ type: String }], // hoặc ref tới collection 'Document'
     activities: [
       {
         title: String,
@@ -69,7 +84,7 @@ const ProjectSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Project = model("Project", ProjectSchema);
