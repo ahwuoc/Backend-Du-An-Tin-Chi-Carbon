@@ -67,7 +67,14 @@ export default class ProjectCarbonController {
         Array.isArray(files["landDocuments"])
           ? files["landDocuments"].map((file) => file.path || file.filename)
           : [];
-
+      const existedMember = await ProjectMember.findOne({ userId, projectId });
+      if (existedMember) {
+        console.log(
+          `User ${userId} đã tham gia dự án ${projectId} với role: ${existedMember.role}`,
+        );
+        res.status(400).json({ message: "User đã tham gia dự án này." });
+        return;
+      }
       const kmlFilePath =
         files &&
         "kmlFile" in files &&
