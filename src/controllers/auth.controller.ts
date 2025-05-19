@@ -74,12 +74,28 @@ class AuthController {
     try {
       const userId = req.params.id;
 
+      // 1. Lấy orders theo userId
       const orders = await Order.find({ userId });
+
+      // 2. Lấy danh sách productId từ orders
+      const productIds = orders.map((o) => o.productId);
+
+      // 3. Lấy thông tin product
+      const products = await Product.find({ _id: { $in: productIds } });
+
+      // 4. Map product vào từng order
+      const ordersWithProduct = orders.map((order) => ({
+        ...order.toObject(),
+        product: products.find((p) => p._id.equals(order.productId)) || null,
+      }));
+
+      // 5. Lấy memberships và project
       const memberships = await ProjectMember.find({ userId });
       const projectIds = memberships.map((m) => m.projectId);
       const projects = await Project.find({ _id: { $in: projectIds } });
+
       res.json({
-        orders,
+        orders: ordersWithProduct,
         projects,
       });
     } catch (error) {
