@@ -52,7 +52,7 @@ class OrderController {
         100000 + Math.random() * 900000,
       ).toString();
       const OrderBank = {
-        orderCode: random6Digits,
+        orderCode: Number(random6Digits),
         amount,
         description: "Thanh toán vui vẻ",
         buyerName,
