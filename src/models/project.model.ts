@@ -13,8 +13,9 @@ export interface IProjectDocument {
   name: string;
   url: string;
   type?: string;
-  uploadedAt?: string;
+  uploadedAt?: string; // ISO date string
   userId?: string;
+  status?: "pending" | "approved" | "rejected";
 }
 
 export interface IProject {
@@ -46,7 +47,7 @@ const ProjectSchema = new Schema(
     description: { type: String },
     status: {
       type: String,
-      enum: ["pending", "active", "completed", "archived"],
+      enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
     documents: [
@@ -56,6 +57,11 @@ const ProjectSchema = new Schema(
         type: { type: String },
         uploadedAt: { type: Date, default: Date.now },
         userId: { type: Types.ObjectId, ref: "User" },
+        status: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
       },
     ],
     registrationDate: { type: Date },

@@ -75,13 +75,56 @@ class ProjectController {
     }
   }
 
+  public async updateDocumentsStatus(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const { projectId, documentId } = req.params;
+      const { status } = req.query;
+      if (typeof status !== "string") {
+        res.status(400).json({ error: "`status` phải là kiểu chuỗi (string)" });
+        return;
+      }
+
+      // Optional: validate giá trị status nếu cần
+      const validStatuses = ["rejected", "approved", "pending"];
+      if (!validStatuses.includes(status)) {
+        res.status(400).json({
+          error: `Giá trị 'status' không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`,
+        });
+        return;
+      }
+      const updatedProject = await Project.findOneAndUpdate(
+        { _id: projectId, "documents._id": documentId },
+        { $set: { "documents.$.status": status } },
+        { new: true },
+      );
+
+      if (!updatedProject) {
+        res
+          .status(404)
+          .json({ error: "Không tìm thấy project hoặc document." });
+        return;
+      }
+      res.status(200).json(updatedProject);
+      return;
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái tài liệu:", error);
+      res
+        .status(500)
+        .json({ message: "Đã xảy ra lỗi khi cập nhật trạng thái", error });
+      return;
+    }
+  }
+
   public async updateDocuments(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { documents } = req.body;
 
       if (!Array.isArray(documents)) {
-        res.status(400).json({ error: "activity phải là một mảng" });
+        res.status(400).json({ error: "documents phải là một mảng" });
         return;
       }
       const product = await Project.findByIdAndUpdate(
