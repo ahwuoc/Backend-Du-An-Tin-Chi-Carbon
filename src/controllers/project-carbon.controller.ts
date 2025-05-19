@@ -1,6 +1,8 @@
 import type { Request, Response } from "express"; // Import Express types
 import { ProjectCarbon } from "../models/project-carbon.model";
 import { Types } from "mongoose";
+import { param } from "express-validator";
+import { Project } from "../models/project.model";
 
 interface ProjectCarbonInputData {
   name: string;
@@ -94,7 +96,7 @@ export default class ProjectCarbonController {
         typeof newProjectData.details.riceStartDate === "string"
       ) {
         newProjectData.details.riceStartDate = new Date(
-          newProjectData.details.riceStartDate
+          newProjectData.details.riceStartDate,
         );
       }
       if (
@@ -102,7 +104,7 @@ export default class ProjectCarbonController {
         typeof newProjectData.details.riceEndDate === "string"
       ) {
         newProjectData.details.riceEndDate = new Date(
-          newProjectData.details.riceEndDate
+          newProjectData.details.riceEndDate,
         );
       }
 
@@ -120,9 +122,23 @@ export default class ProjectCarbonController {
     }
   }
 
+  static async getProjectByUser(req: Request, res: Response) {
+    const userId = req.params.id;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Thiếu userId" });
+    }
+    try {
+      const project = await ProjectCarbon.find({ userId });
+      return res.json(project);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Lỗi khi lấy project" });
+    }
+  }
   static async getAllProjectCarbons(
     req: Request,
-    res: Response
+    res: Response,
   ): Promise<void> {
     try {
       const projects = await ProjectCarbon.find({});
@@ -137,7 +153,7 @@ export default class ProjectCarbonController {
 
   static async getProjectCarbonById(
     req: Request,
-    res: Response
+    res: Response,
   ): Promise<void> {
     try {
       const project = await ProjectCarbon.findById(req.params.id);
@@ -168,7 +184,7 @@ export default class ProjectCarbonController {
         typeof updateData.details.riceStartDate === "string"
       ) {
         updateData.details.riceStartDate = new Date(
-          updateData.details.riceStartDate
+          updateData.details.riceStartDate,
         );
       }
       if (
@@ -176,14 +192,14 @@ export default class ProjectCarbonController {
         typeof updateData.details.riceEndDate === "string"
       ) {
         updateData.details.riceEndDate = new Date(
-          updateData.details.riceEndDate
+          updateData.details.riceEndDate,
         );
       }
 
       const project = await ProjectCarbon.findByIdAndUpdate(
         projectId,
         updateData, // Mongoose can often handle nested updates if the structure matches the schema
-        { new: true, runValidators: true } // { new: true } returns the updated doc, { runValidators: true } validates updates
+        { new: true, runValidators: true }, // { new: true } returns the updated doc, { runValidators: true } validates updates
       );
 
       if (!project) {
