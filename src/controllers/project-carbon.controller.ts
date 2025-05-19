@@ -124,16 +124,18 @@ export default class ProjectCarbonController {
 
   static async getProjectByUser(req: Request, res: Response) {
     const userId = req.params.id;
-
     if (!userId) {
-      return res.status(400).json({ error: "Thiếu userId" });
+      res.status(400).json({ error: "Thiếu userId" });
+      return;
     }
     try {
       const project = await ProjectCarbon.find({ userId });
-      return res.json(project);
+      res.json(project);
+      return;
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ error: "Lỗi khi lấy project" });
+      res.status(500).json({ error: "Lỗi khi lấy project" });
+      return;
     }
   }
   static async getAllProjectCarbons(
