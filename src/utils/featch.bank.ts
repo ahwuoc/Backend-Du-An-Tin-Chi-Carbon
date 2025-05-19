@@ -14,7 +14,7 @@ interface Order {
 const CLIENT_ID = process.env.PAYOS_CLIENT_ID!;
 const API_KEY = process.env.PAYOS_API_KEY!;
 const CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY!;
-const baseUrl = process.env.FRONT_END_URL ?? "http://localhost:3000";
+const baseUrl = process.env.FRONT_END_URL!;
 
 const HEADERS = {
   "Content-Type": "application/json",
@@ -56,6 +56,8 @@ export async function createOrder(order: Order): Promise<any> {
   };
 
   // 🔍 Log rõ ràng hơn
+  console.log("📦 Callback URLs:", { cancelUrl, returnUrl });
+
   console.log("📦 Payload gửi đến PayOS:", JSON.stringify(payload, null, 2));
   console.log("📨 Headers:", HEADERS);
 
