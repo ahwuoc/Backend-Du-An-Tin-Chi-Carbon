@@ -3,7 +3,7 @@ import { Types } from "mongoose"; // For ObjectId
 
 interface ProjectCarbonData {
   name: string;
-  organization?: string; // Optional
+  organization?: string;
   phone: string;
   email: string;
   address?: string; // Optional

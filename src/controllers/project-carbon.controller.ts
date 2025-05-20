@@ -44,19 +44,6 @@ export default class ProjectCarbonController {
   static async createProjectCarbon(req: Request, res: Response): Promise<void> {
     try {
       console.log("data =>=========>", req.body);
-      const {
-        projectId,
-        userId,
-        name,
-        organization,
-        phone,
-        email,
-        address,
-        projectType,
-        additionalInfo,
-        details,
-      } = req.body;
-
       const files = req.files as
         | { [fieldname: string]: Express.Multer.File[] }
         | Express.Multer.File[];
@@ -67,6 +54,7 @@ export default class ProjectCarbonController {
         Array.isArray(files["landDocuments"])
           ? files["landDocuments"].map((file) => file.path || file.filename)
           : [];
+
       const kmlFilePath =
         files &&
         "kmlFile" in files &&
@@ -76,22 +64,14 @@ export default class ProjectCarbonController {
           : null;
 
       const newProjectData: ProjectCarbonInputData = {
-        userId,
-        name,
-        organization,
-        phone,
-        email,
-        address,
-        projectType,
-        details: {
-          ...details,
-        },
-        additionalInfo,
+        ...req.body,
         landDocuments: landDocumentPaths,
         kmlFile: kmlFilePath,
+        details: {
+          ...(req.body.details || {}),
+        },
       };
 
-      // Parse date nếu là string
       if (typeof newProjectData.details?.riceStartDate === "string") {
         newProjectData.details.riceStartDate = new Date(
           newProjectData.details.riceStartDate,
@@ -104,16 +84,6 @@ export default class ProjectCarbonController {
       }
 
       const project = await ProjectCarbon.create(newProjectData);
-
-      await ProjectMember.create({
-        userId,
-        projectId, // lấy từ client gửi lên
-        role: "member", // hoặc để client chọn
-        status: "approved",
-        joinedAt: new Date(),
-        approvedAt: new Date(),
-        approvedBy: userId, // tự duyệt luôn
-      });
       res.status(201).json(project);
     } catch (error: any) {
       console.error("Error creating project:", error);
