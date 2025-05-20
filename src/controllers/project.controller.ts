@@ -187,9 +187,10 @@ class ProjectController {
         res.status(400).json({ message: "Invalid project ID" });
         return;
       }
-      const project = await ProjectCarbon.findById(id).populate("userId"); // Nếu liên kết với User model
+      const project = await ProjectCarbon.findById(id).populate("userId");
       if (!project) {
         res.status(404).json({ message: "Project not found" });
+        return;
       }
       res.status(200).json(project);
     } catch (error) {
@@ -199,7 +200,7 @@ class ProjectController {
   async getUserProfileProject(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-      const projects = await ProjectCarbon.findById(userId);
+      const projects = await ProjectCarbon.find({ userId });
       res.json(projects);
     } catch (err) {
       res.status(500).json({ error: "Server error", details: err });
