@@ -50,16 +50,6 @@ app.set("trust proxy", 1);
       credentials: true,
     }),
   );
-
-  // Middleware log tất cả request
-  app.use((req, res, next) => {
-    console.log(`\n[Request] ${req.method} ${req.url}`);
-    console.log("Headers:", req.headers);
-    if (["POST", "PUT"].includes(req.method)) {
-      console.log("Body:", req.body);
-    }
-    next();
-  });
   app.use("/api/auth", authRouter);
   app.use("/api/consultation", consultationRouter);
   app.use("/api/projects", projectRouter);
