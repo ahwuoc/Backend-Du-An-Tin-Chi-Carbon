@@ -1,22 +1,22 @@
 import mongoose, { Schema, Document, Types, Model } from "mongoose";
 
 export interface IAffiliate extends Document {
-  userId: Types.ObjectId;
-  fullName: string;
-  email: string;
-  phone: string;
+  userId?: Types.ObjectId;
+  fullName?: string;
+  email?: string;
+  phone?: string;
   company?: string;
   reason?: string;
   address?: string;
   website?: string;
   socialMedia?: string;
   experience?: string;
-  referralLink: string;
-  referralCode: string;
-  totalClicks: number;
-  totalRegistrations: number;
-  totalCommission: number;
-  status: "pending" | "approved" | "rejected";
+  referralLink?: string;
+  referralCode?: string;
+  totalClicks?: number;
+  totalRegistrations?: number;
+  totalCommission?: number;
+  status?: "pending" | "approved" | "rejected";
   createdAt: Date;
   updatedAt: Date;
   paymentLinkId?: string;
@@ -24,31 +24,31 @@ export interface IAffiliate extends Document {
 
 const AffiliateSchema = new Schema<IAffiliate>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    fullName: String,
-    email: String,
-    phone: String,
-    company: String,
-    reason: String,
-    address: String,
-    website: String,
-    socialMedia: String,
-    experience: String,
-    referralLink: String,
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: false },
+    fullName: { type: String, required: false },
+    email: { type: String, required: false },
+    phone: { type: String, required: false },
+    company: { type: String, required: false },
+    reason: { type: String, required: false },
+    address: { type: String, required: false },
+    website: { type: String, required: false },
+    socialMedia: { type: String, required: false },
+    experience: { type: String, required: false },
+    referralLink: { type: String, required: false },
     referralCode: {
       type: String,
-      unique: true,
+      unique: false,
       trim: true,
     },
-    totalClicks: Number,
-    totalRegistrations: Number,
-    totalCommission: Number,
+    totalClicks: { type: Number, default: 0 },
+    totalRegistrations: { type: Number, default: 0 },
+    totalCommission: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "approved",
     },
-    paymentLinkId: String,
+    paymentLinkId: { type: String, required: false },
   },
   { timestamps: true },
 );

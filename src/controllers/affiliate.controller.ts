@@ -38,8 +38,6 @@ class AffiliateController {
           message: "User is already registered as an affiliate",
         });
       }
-
-      // Tạo referral link không cần code
       const referralLink = `${
         process.env.FRONT_END_URL || "http://localhost:3000/"
       }/dang-ky?ref=${userId}`;

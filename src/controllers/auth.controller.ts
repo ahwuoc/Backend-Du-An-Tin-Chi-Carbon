@@ -10,6 +10,7 @@ import { Product } from "../models/products.model";
 import { ProjectMember } from "../models/project-member.router";
 import { Project } from "../models/project.model";
 import Order from "../models/order.model";
+import AffiliateModel from "../models/affiliate.model";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
@@ -191,16 +192,19 @@ class AuthController {
       return;
     }
     if (!validator.isEmail(email)) {
-      res.status(400).json({ success: false, error: "Email không hợp lệ." });
+      res.status(400).json({
+        success: false,
+        error: "Email không hợp lệ.",
+      });
       return;
     }
     if (password.length < 6) {
-      res
-        .status(400)
-        .json({ success: false, error: "Mật khẩu phải có ít nhất 6 ký tự." });
+      res.status(400).json({
+        success: false,
+        error: "Mật khẩu phải có ít nhất 6 ký tự.",
+      });
       return;
     }
-
     try {
       const existingUser = await this.userModel.findOne({ email });
       if (existingUser) {
@@ -218,13 +222,19 @@ class AuthController {
         role,
         createdAt: new Date(),
       });
+
+      // Nếu tạo user không thành công
       if (!newUser) {
         res.status(409).json({
           success: false,
-          error: "Đăng ký thất bại vui lòng thử lại",
+          error: "Đăng ký thất bại. Vui lòng thử lại.",
         });
         return;
       }
+
+      await AffiliateModel.create({
+        userId: newUser._id,
+      });
       res.status(201).json({
         success: true,
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
@@ -234,6 +244,7 @@ class AuthController {
           email: newUser.email,
         },
       });
+
       return;
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
@@ -241,6 +252,7 @@ class AuthController {
         success: false,
         error: error.message || "Lỗi hệ thống khi đăng ký.",
       });
+      return;
     }
   };
 
@@ -301,6 +313,9 @@ class AuthController {
           role: "user",
           isVerified: googleUserData.email_verified,
           provider: "google",
+        });
+        await AffiliateModel.create({
+          userId: user._id,
         });
         isNewUser = true;
         console.log("✅ Người dùng mới đã được tạo:", user.email);
