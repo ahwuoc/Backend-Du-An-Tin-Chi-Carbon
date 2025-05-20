@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import Consultation from "../models/consultation";
 import type { IConsultation } from "../types/consultation";
+import {
+  sendMailConsultationFeedback,
+  sendMailRegisterCheckout,
+} from "../utils/emailTemplates";
+import { sendEmail } from "../utils/sendEmail";
 
 interface ConsultationRequest extends Request {
   body: { formData: IConsultation }; // Thêm formData vào trong body
@@ -10,7 +15,7 @@ type OmitConsultation = Omit<IConsultation, "createdAt" | "updatedAt" | "_id">;
 
 export const registerConsultation = async (
   req: ConsultationRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   console.log("Chạy vào đây");
 
@@ -120,7 +125,7 @@ export const registerConsultation = async (
 };
 export const getAllConsultation = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const consultations = await Consultation.find();
@@ -133,6 +138,38 @@ export const getAllConsultation = async (
     res.status(500).json({
       success: false,
       error: "Server error, please try again later",
+    });
+  }
+};
+export const deleteConsultation = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const _id = req.params.id;
+
+    const { email, feedback, name } = req.body;
+    const mailContent = sendMailConsultationFeedback(name, email, feedback);
+
+    await sendEmail(email, "Phản hồi từ Tín Chỉ Carbon Việt Nam", mailContent);
+    const deleted = await Consultation.findByIdAndDelete(_id);
+    if (!deleted) {
+      res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy bản ghi để xoá." });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Phản hồi đã gửi, consultation đã được xoá.",
+      deleted,
+    });
+  } catch (error) {
+    console.error("Error in deleteConsultation:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error, please try again later.",
     });
   }
 };
