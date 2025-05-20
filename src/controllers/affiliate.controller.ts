@@ -140,38 +140,40 @@ class AffiliateController {
 
   async updateAffiliate(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      const { fullName, email, phone, reason, referralCode, status } = req.body;
-      if (
-        !fullName ||
-        !email ||
-        !phone ||
-        !reason ||
-        !referralCode ||
-        !status
-      ) {
-        res.status(400).json({ message: "Missing required fields" });
+      const id = req.params.id;
+      const { status } = req.body; // Chỉ lấy trường status từ req.body
+
+      if (!status) {
+        res.status(400).json({ message: "Trường 'status' là bắt buộc." });
+        return;
       }
       const affiliate = await Affiliate.findByIdAndUpdate(
         id,
-        { fullName, email, phone, reason, referralCode, status },
-        { new: true, runValidators: true }
+        { status: status },
+        { new: true, runValidators: true }, // new: true trả về tài liệu đã cập nhật; runValidators: true chạy các validator đã định nghĩa trong schema
       );
+
       if (!affiliate) {
-        res.status(404).json({ message: "Affiliate not found" });
+        res.status(404).json({ message: "Không tìm thấy Affiliate." });
+        return;
       }
-      res
-        .status(200)
-        .json({ message: "Affiliate updated successfully", affiliate });
+
+      res.status(200).json({
+        message: "Cập nhật trạng thái Affiliate thành công",
+        affiliate,
+      });
     } catch (error) {
       console.error(
-        `[updateAffiliate] Error: ${
+        `[updateAffiliate] Lỗi: ${
           error instanceof Error ? error.message : error
-        }`
+        }`,
       );
-      res.status(500).json({ message: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: "Lỗi máy chủ nội bộ. Vui lòng thử lại sau." });
     }
   }
+
   async deleteAffiliate(req: Request, res: Response) {
     if (req.method !== "DELETE") {
       res.status(405).json({ message: "Method Not Allowed" });
