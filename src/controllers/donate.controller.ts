@@ -55,12 +55,12 @@ class DonationController {
 
       const totalQuantity = donations.reduce(
         (acc, donation) => acc + donation.quantity,
-        0
+        0,
       );
 
       const totalTreeCount = donations.reduce(
         (acc, donation) => acc + (donation.treeCount || 0),
-        0
+        0,
       );
 
       const contributorMap: Record<string, number> = {};
@@ -77,7 +77,7 @@ class DonationController {
         ([email, treeCount]) => ({
           email,
           treeCount,
-        })
+        }),
       );
 
       res.status(200).json({
@@ -104,6 +104,23 @@ class DonationController {
       res
         .status(500)
         .json({ error: "Lỗi server, danh sách đóng góp mất tiêu rồi!" });
+    }
+  }
+
+  public async deleteDonations(req: Request, res: Response) {
+    const _id = req.params.id;
+    try {
+      const deleted = await Donation.findByIdAndDelete(_id);
+
+      if (!deleted) {
+        return res
+          .status(404)
+          .json({ error: "Không tìm thấy donation cần xóa." });
+      }
+      res.status(200).json({ message: "Xóa donation thành công!", deleted });
+    } catch (error) {
+      console.error("Lỗi khi xóa donation:", error);
+      res.status(500).json({ error: "Lỗi server, xóa không được rồi!" });
     }
   }
 }

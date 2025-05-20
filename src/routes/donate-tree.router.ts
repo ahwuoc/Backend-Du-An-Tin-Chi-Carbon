@@ -6,5 +6,5 @@ const router = Router();
 router.post("/", instance.createDonation.bind(instance));
 router.get("/", instance.getDonations.bind(instance));
 router.get("/infor", instance.getInfoDonations.bind(instance));
-
+router.delete("/:id", instance.deleteDonations.bind(instance));
 export default router;
