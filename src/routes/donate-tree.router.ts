@@ -7,4 +7,5 @@ router.post("/", instance.createDonation.bind(instance));
 router.get("/", instance.getDonations.bind(instance));
 router.get("/infor", instance.getInfoDonations.bind(instance));
 router.delete("/:id", instance.deleteDonations.bind(instance));
+router.put("/:id", instance.updateDonations.bind(instance));
 export default router;

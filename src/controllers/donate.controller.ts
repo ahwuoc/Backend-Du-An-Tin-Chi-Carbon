@@ -113,14 +113,34 @@ class DonationController {
       const deleted = await Donation.findByIdAndDelete(_id);
 
       if (!deleted) {
-        return res
-          .status(404)
-          .json({ error: "Không tìm thấy donation cần xóa." });
+        res.status(404).json({ error: "Không tìm thấy donation cần xóa." });
+        return;
       }
       res.status(200).json({ message: "Xóa donation thành công!", deleted });
     } catch (error) {
       console.error("Lỗi khi xóa donation:", error);
       res.status(500).json({ error: "Lỗi server, xóa không được rồi!" });
+    }
+  }
+  public async updateDonations(req: Request, res: Response) {
+    const _id = req.params.id;
+    const updateData = req.body;
+    try {
+      const updated = await Donation.findByIdAndUpdate(_id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!updated) {
+        res.status(404).json({ error: "Không tìm thấy donation để cập nhật." });
+        return;
+      }
+      res
+        .status(200)
+        .json({ message: "Cập nhật donation thành công!", updated });
+    } catch (error) {
+      console.error("Lỗi khi cập nhật donation:", error);
+      res.status(500).json({ error: "Lỗi server, cập nhật thất bại!" });
     }
   }
 }
