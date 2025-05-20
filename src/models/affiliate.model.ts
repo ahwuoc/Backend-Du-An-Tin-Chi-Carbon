@@ -46,11 +46,11 @@ const AffiliateSchema = new Schema<IAffiliate>(
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      default: "approved",
     },
     paymentLinkId: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 AffiliateSchema.pre("save", async function (next) {
