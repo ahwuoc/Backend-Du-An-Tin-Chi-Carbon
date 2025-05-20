@@ -1,6 +1,22 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-const userSchema = new mongoose.Schema(
+// 1. Interface mô tả shape dữ liệu
+export interface IUser {
+  email: string;
+  password: string;
+  name: string;
+  role?: "user" | "admin" | "editor";
+  avatar?: string;
+  phone?: string;
+  address?: string;
+  provider?: "local" | "google";
+  ref?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// 2. Mongoose schema + gắn interface vào
+const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
@@ -42,10 +58,6 @@ const userSchema = new mongoose.Schema(
       enum: ["local", "google"],
       default: "local",
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
     ref: {
       type: String,
       trim: true,
@@ -53,7 +65,9 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
-
-export const UserModel = mongoose.model("User", userSchema);
+export const UserModel: Model<IUser> = mongoose.model<IUser>(
+  "User",
+  userSchema,
+);

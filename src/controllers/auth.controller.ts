@@ -11,6 +11,7 @@ import { ProjectMember } from "../models/project-member.router";
 import { Project } from "../models/project.model";
 import Order from "../models/order.model";
 import AffiliateModel from "../models/affiliate.model";
+import { ProjectCarbon } from "../models/project-carbon.model";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
@@ -74,11 +75,8 @@ class AuthController {
   async getManagerInfor(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-
       const orders = await Order.find({ userId }).populate("productId");
-      const memberships = await ProjectMember.find({ userId });
-      const projectIds = memberships.map((m) => m.projectId);
-      const projects = await Project.find({ _id: { $in: projectIds } });
+      const projects = await ProjectCarbon.find({ userId });
       res.json({
         orders,
         projects,
@@ -270,7 +268,6 @@ class AuthController {
       });
       return;
     }
-
     try {
       console.log("📡 Gọi Google API để lấy thông tin người dùng...");
       const userInfoResponse = await axios.get(
