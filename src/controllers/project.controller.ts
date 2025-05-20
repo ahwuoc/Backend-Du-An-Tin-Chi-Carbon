@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Project } from "../models/project.model";
 import { ProjectMember } from "../models/project-member.router";
+import { ProjectCarbon } from "../models/project-carbon.model";
 class ProjectController {
   async createProject(req: Request, res: Response) {
     try {
@@ -186,7 +187,7 @@ class ProjectController {
         res.status(400).json({ message: "Invalid project ID" });
         return;
       }
-      const project = await Project.findById(id).populate("userId"); // Nếu liên kết với User model
+      const project = await ProjectCarbon.findById(id).populate("userId"); // Nếu liên kết với User model
       if (!project) {
         res.status(404).json({ message: "Project not found" });
       }
@@ -198,7 +199,7 @@ class ProjectController {
   async getUserProfileProject(req: Request, res: Response) {
     try {
       const userId = req.params.id;
-      const projects = await Project.findById(userId);
+      const projects = await ProjectCarbon.findById(userId);
       res.json(projects);
     } catch (err) {
       res.status(500).json({ error: "Server error", details: err });
