@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 import { Types } from "mongoose"; // For ObjectId
-
+export interface IProjectDocument {
+  name: string;
+  url: string;
+  type?: string;
+}
 interface ProjectCarbonData {
   name: string;
   organization?: string;
@@ -32,7 +36,7 @@ interface ProjectCarbonData {
   };
   status: "active" | "pending" | "completed";
   additionalInfo?: string; // Optional
-  landDocuments?: string[]; // Array of strings
+  landDocuments?: IProjectDocument[];
   kmlFile?: string | null; // String or null
   userId: Types.ObjectId;
 }
@@ -109,7 +113,13 @@ const ProjectCarbonSchema = new mongoose.Schema(
     },
 
     landDocuments: {
-      type: [String],
+      type: [
+        {
+          name: { type: String, required: true },
+          url: { type: String, required: true },
+          type: { type: String }, // optional
+        },
+      ],
       default: [],
     },
     kmlFile: {
