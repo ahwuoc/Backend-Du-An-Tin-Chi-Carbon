@@ -30,6 +30,7 @@ interface ProjectCarbonData {
     biocharLandArea?: string;
     biocharApplicationMethod?: string;
   };
+  status: "active" | "pending" | "completed";
   additionalInfo?: string; // Optional
   landDocuments?: string[]; // Array of strings
   kmlFile?: string | null; // String or null
@@ -41,6 +42,12 @@ const ProjectCarbonSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    status: {
+      type: String,
+      require: true,
+      enum: ["active", "pending", "completed"],
+      default: "active",
     },
     organization: {
       type: String,
@@ -117,10 +124,10 @@ const ProjectCarbonSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const ProjectCarbon = mongoose.model(
   "ProjectCarbon",
-  ProjectCarbonSchema
+  ProjectCarbonSchema,
 );
