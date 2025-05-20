@@ -167,7 +167,7 @@ class ProjectController {
   }
   async getAllProjects(req: Request, res: Response) {
     try {
-      const projects = await Project.find().populate("userId").lean();
+      const projects = await ProjectCarbon.find().populate("userId").lean();
       res.status(200).json(projects);
     } catch (error) {
       res
