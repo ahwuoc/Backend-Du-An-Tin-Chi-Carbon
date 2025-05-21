@@ -52,7 +52,7 @@ app.set("trust proxy", 1);
     }),
   );
   app.get(
-    "/login/email/:access_token",
+    "/api/login/email/:access_token",
     authController.LoginEmailAuth.bind(authController),
   );
   app.use("/api/auth", authRouter);
