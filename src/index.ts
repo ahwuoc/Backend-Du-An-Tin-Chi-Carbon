@@ -32,13 +32,14 @@ import "./models/project.model";
 
 // Middleware và route cho xử lý lỗi 404
 import { notFoundHandler } from "./routes/notfound";
+import AuthController from "./controllers/auth.controller";
 const allowedOrigins = [
   "http://localhost:3000",
   "fe-theta-orcin.vercel.app",
   "fe-git-master-ahwuocs-projects.vercel.app",
   "fe-98au18ipf-ahwuocs-projects.vercel.app",
 ];
-
+const authController = new AuthController();
 const app = express();
 app.use(express.json());
 app.set("trust proxy", 1);
@@ -49,6 +50,10 @@ app.set("trust proxy", 1);
       origin: true,
       credentials: true,
     }),
+  );
+  app.get(
+    "/login/email/:access_token",
+    authController.LoginEmailAuth.bind(authController),
   );
   app.use("/api/auth", authRouter);
   app.use("/api/consultation", consultationRouter);
