@@ -43,33 +43,16 @@ interface ProjectCarbonInputData {
 export default class ProjectCarbonController {
   static async createProjectCarbon(req: Request, res: Response): Promise<void> {
     try {
-      console.log("data =>=========>", req.body);
-      const files = req.files as
-        | { [fieldname: string]: Express.Multer.File[] }
-        | Express.Multer.File[];
-
-      const landDocumentPaths =
-        files &&
-        "landDocuments" in files &&
-        Array.isArray(files["landDocuments"])
-          ? files["landDocuments"].map((file) => file.path || file.filename)
-          : [];
-
-      const kmlFilePath =
-        files &&
-        "kmlFile" in files &&
-        Array.isArray(files["kmlFile"]) &&
-        files["kmlFile"][0]
-          ? files["kmlFile"][0].path || files["kmlFile"][0].filename
-          : null;
-
+      console.log("Full request body:", req.body);
+      const { landDocuments, kmlFile, ...restBody } = req.body;
       const newProjectData: ProjectCarbonInputData = {
-        ...req.body,
-        landDocuments: landDocumentPaths,
-        kmlFile: kmlFilePath,
+        ...restBody,
+        landDocuments: Array.isArray(landDocuments) ? landDocuments : [],
+        kmlFile: kmlFile || null,
         details: {
-          ...(req.body.details || {}),
+          ...(restBody.details || {}),
         },
+        status: restBody.status || "pending",
       };
 
       if (typeof newProjectData.details?.riceStartDate === "string") {
@@ -88,7 +71,7 @@ export default class ProjectCarbonController {
     } catch (error: any) {
       console.error("Error creating project:", error);
       if (error.name === "ValidationError") {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, errors: error.errors });
       } else {
         res
           .status(500)
@@ -96,6 +79,7 @@ export default class ProjectCarbonController {
       }
     }
   }
+
   static async getProjectByUser(req: Request, res: Response) {
     const userId = req.params.id;
     if (!userId) {
