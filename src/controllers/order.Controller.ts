@@ -19,6 +19,7 @@ class OrderController {
         amount,
         productId,
         userId,
+        note,
         buyerAddress,
       } = req.body;
 
@@ -51,7 +52,7 @@ class OrderController {
       const OrderBank = {
         orderCode: random6Digits,
         amount,
-        description: String(`${buyerName}${buyerPhone}${product.name}`),
+        description: note,
         buyerName,
         buyerEmail: email,
         buyerPhone,
@@ -64,7 +65,7 @@ class OrderController {
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
 
         const orderData = new Order({
-          orderCode: `MA_ORDER-${OrderBank.orderCode}`,
+          orderCode: OrderBank.orderCode,
           amount: 1,
           status: "success",
           referralCode,
@@ -97,7 +98,7 @@ class OrderController {
           console.log("Email sent successfully to:", email);
         }
         const orderData = new Order({
-          orderCode: `MA_ORDER-${response.data.orderCode}`,
+          orderCode: response.data.orderCode,
           amount: response.data.amount + 1,
           linkthanhtoan: response.data.checkoutUrl,
           status: "pending",
@@ -250,7 +251,7 @@ class OrderController {
   async delete(req: Request, res: Response) {
     try {
       let orderCode = req.params.orderCode;
-      orderCode = `MA_ORDER-${orderCode}`;
+      orderCode = orderCode;
       const deletedOrder = await Order.findOneAndDelete({ orderCode });
       if (!deletedOrder) {
         res.status(404).json({ error: "Không tìm thấy đơn hàng để xoá" });
