@@ -77,9 +77,9 @@ const ProjectCarbonSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      required: true, // `require` nên là `required`
-      enum: ["active", "pending", "completed", "archived"], // Thêm "archived" nếu bạn sử dụng nó
-      default: "pending", // Đã sửa đổi default thành "pending"
+      required: true,
+      enum: ["active", "pending", "completed", "archived"],
+      default: "active",
     },
     organization: {
       type: String,

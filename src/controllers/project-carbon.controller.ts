@@ -1,4 +1,4 @@
-import type { Request, Response } from "express"; // Import Express types
+import type { Request, Response } from "express";
 import { ProjectCarbon } from "../models/project-carbon.model";
 import { Types } from "mongoose";
 import { param } from "express-validator";
@@ -52,7 +52,6 @@ export default class ProjectCarbonController {
         details: {
           ...(restBody.details || {}),
         },
-        status: restBody.status || "pending",
       };
 
       if (typeof newProjectData.details?.riceStartDate === "string") {
