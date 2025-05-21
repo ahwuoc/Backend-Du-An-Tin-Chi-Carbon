@@ -23,7 +23,7 @@ const HEADERS = {
 };
 
 const currentTime = Math.floor(Date.now() / 1000);
-const expiredAt = currentTime + 3600;
+const expired_at = currentTime + 3600;
 
 function createSignature(
   order: Order,
@@ -49,7 +49,7 @@ export async function createOrder(order: Order): Promise<any> {
 
   const payload = {
     ...order,
-    expiredAt,
+    expired_at,
     cancelUrl,
     returnUrl,
     signature,
