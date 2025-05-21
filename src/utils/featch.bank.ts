@@ -37,9 +37,10 @@ function createSignature(
     .digest("hex");
 }
 
-export async function createOrder(order: Order): Promise<any> {
-  const cancelUrl = `${baseUrl}/huy-don`;
-  const returnUrl = `${baseUrl}/hoan-thanh`;
+export async function createOrder(order: Order, url?: string): Promise<any> {
+  const fullurl = url ?? baseUrl;
+  const cancelUrl = `${fullurl}/huy-don`;
+  const returnUrl = `${fullurl}/hoan-thanh`;
 
   if (!order.amount || !order.orderCode || !order.description) {
     throw new Error("⚠️ Thiếu thông tin bắt buộc của order");

@@ -14,6 +14,13 @@ export interface IKmlFile {
   url: string;
   createdAt?: Date;
 }
+type ProjectStatus =
+  | "surveying" // Đang khảo sát và đánh giá tiềm năng carbon
+  | "designing" // Đang thiết kế dự án, chọn phương pháp, baseline
+  | "verifying" // Đang được xác minh và phê duyệt
+  | "implementing" // Đang triển khai hoạt động và giám sát
+  | "credit_issuing" // Đang xác minh kết quả và phát hành carbon credit
+  | "trading"; // Đang bán carbon credit và chia lợi nhuận
 
 interface ProjectCarbonData {
   name: string;
@@ -44,7 +51,7 @@ interface ProjectCarbonData {
     biocharLandArea?: string;
     biocharApplicationMethod?: string;
   };
-  status: "active" | "pending" | "completed";
+  status: ProjectStatus;
   additionalInfo?: string; // Optional
   landDocuments?: IProjectDocument[];
   kmlFile?: IKmlFile | null; // Đã cập nhật thành đối tượng hoặc null
@@ -88,8 +95,15 @@ const ProjectCarbonSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ["active", "pending", "completed", "archived"],
-      default: "active",
+      enum: [
+        "surveying", // Đang khảo sát
+        "designing", // Thiết kế dự án
+        "verifying", // Xác minh & phê duyệt
+        "implementing", // Triển khai & giám sát
+        "credit_issuing", // Phát hành tín chỉ
+        "trading", // Giao dịch & chia lợi nhuận
+      ],
+      default: "surveying",
     },
     organization: {
       type: String,

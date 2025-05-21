@@ -88,7 +88,11 @@ class OrderController {
         res.status(201).json(orderData);
         return;
       }
-      const response = await createOrder(OrderBank);
+      // ================Fix============
+      let baseUrl = req.headers.referer || req.headers.origin || "Unknown";
+      baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+      // ==============End Fix======
+      const response = await createOrder(OrderBank, baseUrl);
       if (response.code === "00") {
         const mailContent = sendMailRegisterCheckout(OrderBank);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
