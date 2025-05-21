@@ -22,7 +22,6 @@ class OrderController {
         buyerAddress,
       } = req.body;
 
-      // Check missing fields
       const missingFields = Object.entries(req.body)
         .filter(
           ([, value]) => value === undefined || value === null || value === "",
@@ -52,7 +51,7 @@ class OrderController {
       const OrderBank = {
         orderCode: random6Digits,
         amount,
-        description: "Thanh toán vui vẻ",
+        description: String(`${buyerName}${buyerPhone}${product.name}`),
         buyerName,
         buyerEmail: email,
         buyerPhone,
