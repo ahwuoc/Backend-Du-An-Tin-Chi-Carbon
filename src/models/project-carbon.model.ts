@@ -5,12 +5,14 @@ export interface IProjectDocument {
   name: string;
   url: string;
   type?: string;
+  createdAt?: Date;
 }
 
 // Thêm interface cho KML File nếu bạn muốn nó có cấu trúc cụ thể
 export interface IKmlFile {
   name: string;
   url: string;
+  createdAt?: Date;
 }
 
 interface ProjectCarbonData {
@@ -55,6 +57,10 @@ const LandDocumentSchema = new mongoose.Schema(
     name: { type: String, required: true },
     url: { type: String, required: true },
     type: { type: String }, // optional
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { _id: false },
 ); // Không cần _id cho sub-document nếu không có yêu cầu đặc biệt
@@ -64,6 +70,10 @@ const KmlFileSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     url: { type: String, required: true },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { _id: false },
 );

@@ -59,9 +59,13 @@ class ProjectController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const updatedProject = await Project.findByIdAndUpdate(id, updateData, {
-        new: true,
-      });
+      const updatedProject = await ProjectCarbon.findByIdAndUpdate(
+        id,
+        updateData,
+        {
+          new: true,
+        },
+      );
 
       if (!updatedProject) {
         res.status(404).json({ message: "Project not found" });
