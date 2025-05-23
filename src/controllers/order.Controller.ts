@@ -98,8 +98,8 @@ class OrderController {
       const payos: IPayOs = {
         amount: amount,
         description: note,
-        cancelUrl: `${baseUrl}/that-bai`,
-        returnUrl: `${baseUrl}/thanh-cong`,
+        cancelUrl: `${baseUrl}/huy-don`,
+        returnUrl: `${baseUrl}/hoan-thanh`,
         orderCode: random6Digits,
       };
       const response = await createPayOs(payos, dataPayos);

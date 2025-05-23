@@ -14,6 +14,7 @@
         "cookies-next": "^5.1.0",
         "cors": "^2.8.5",
         "dotenv": "^16.5.0",
+        "ecommerce-backend": ".",
         "express": "^5.1.0",
         "express-rate-limit": "^7.5.0",
         "express-validator": "^7.2.1",
@@ -343,7 +344,9 @@
 
     "ecdsa-sig-formatter": ["ecdsa-sig-formatter@1.0.11", "", { "dependencies": { "safe-buffer": "^5.0.1" } }, "sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ=="],
 
-    "ecommerce-backend": ["ecommerce-backend@file:", { "dependencies": { "@supabase/supabase-js": "^2.49.4", "@types/multer": "^1.4.12", "axios": "^1.9.0", "bcrypt": "^5.1.1", "class-transformer": "^0.5.1", "class-validator": "^0.14.1", "cookies-next": "^5.1.0", "cors": "^2.8.5", "dotenv": "^16.5.0", "express": "^5.1.0", "express-rate-limit": "^7.5.0", "express-validator": "^7.2.1", "i": "^0.3.7", "js-cookie": "^3.0.5", "jsonwebtoken": "^9.0.2", "mongoose": "^8.14.2", "multer": "^1.4.5-lts.2", "nanoid": "^5.1.5", "node-cron": "^4.0.5", "node-fetch": "^2.7.0", "nodemailer": "^6.10.1", "slugify": "^1.6.6", "validator": "^13.15.0", "winston": "^3.17.0" }, "devDependencies": { "@types/bcrypt": "^5.0.2", "@types/cors": "^2.8.17", "@types/dotenv": "^6.1.1", "@types/express": "^5.0.1", "@types/jsonwebtoken": "^9.0.9", "@types/mongoose": "^5.11.96", "@types/node": "^22.15.2", "@types/nodemailer": "^6.4.17", "@types/validator": "^13.15.0", "@types/winston": "^2.4.4", "nodemon": "^3.1.10", "ts-node": "^10.9.2", "ts-node-dev": "^2.0.0", "tsc-alias": "^1.8.16", "tsconfig-paths": "^4.2.0", "typescript": "^5.8.3" } }],
+    "ecommerce-backend": ["ecommerce-backend@file:", { "dependencies": { "@supabase/supabase-js": "^2.49.4", "@types/multer": "^1.4.12", "axios": "^1.9.0", "bcrypt": "^5.1.1", "class-transformer": "^0.5.1", "class-validator": "^0.14.1", "cookies-next": "^5.1.0", "cors": "^2.8.5", "dotenv": "^16.5.0", "ecommerce-backend": ".", "express": "^5.1.0", "express-rate-limit": "^7.5.0", "express-validator": "^7.2.1", "i": "^0.3.7", "js-cookie": "^3.0.5", "jsonwebtoken": "^9.0.2", "mongoose": "^8.14.2", "multer": "^1.4.5-lts.2", "nanoid": "^5.1.5", "node-cron": "^4.0.5", "node-fetch": "^2.7.0", "nodemailer": "^6.10.1", "slugify": "^1.6.6", "validator": "^13.15.0", "winston": "^3.17.0" }, "devDependencies": { "@types/bcrypt": "^5.0.2", "@types/cors": "^2.8.17", "@types/dotenv": "^6.1.1", "@types/express": "^5.0.1", "@types/jsonwebtoken": "^9.0.9", "@types/mongoose": "^5.11.96", "@types/node": "^22.15.2", "@types/nodemailer": "^6.4.17", "@types/validator": "^13.15.0", "@types/winston": "^2.4.4", "nodemon": "^3.1.10", "ts-node": "^10.9.2", "ts-node-dev": "^2.0.0", "tsc-alias": "^1.8.16", "tsconfig-paths": "^4.2.0", "typescript": "^5.8.3" } }],
+
+    "ecommerce-backend": ["ecommerce-backend@file:", { "dependencies": { "@supabase/supabase-js": "^2.49.4", "@types/multer": "^1.4.12", "axios": "^1.9.0", "bcrypt": "^5.1.1", "class-transformer": "^0.5.1", "class-validator": "^0.14.1", "cookies-next": "^5.1.0", "cors": "^2.8.5", "dotenv": "^16.5.0", "ecommerce-backend": ".", "express": "^5.1.0", "express-rate-limit": "^7.5.0", "express-validator": "^7.2.1", "i": "^0.3.7", "js-cookie": "^3.0.5", "jsonwebtoken": "^9.0.2", "mongoose": "^8.14.2", "multer": "^1.4.5-lts.2", "nanoid": "^5.1.5", "node-cron": "^4.0.5", "node-fetch": "^2.7.0", "nodemailer": "^6.10.1", "slugify": "^1.6.6", "validator": "^13.15.0", "winston": "^3.17.0" }, "devDependencies": { "@types/bcrypt": "^5.0.2", "@types/cors": "^2.8.17", "@types/dotenv": "^6.1.1", "@types/express": "^5.0.1", "@types/jsonwebtoken": "^9.0.9", "@types/mongoose": "^5.11.96", "@types/node": "^22.15.2", "@types/nodemailer": "^6.4.17", "@types/validator": "^13.15.0", "@types/winston": "^2.4.4", "nodemon": "^3.1.10", "ts-node": "^10.9.2", "ts-node-dev": "^2.0.0", "tsc-alias": "^1.8.16", "tsconfig-paths": "^4.2.0", "typescript": "^5.8.3" } }],
 
     "ee-first": ["ee-first@1.1.1", "", {}, "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="],
 
@@ -778,6 +781,10 @@
     "colorspace/color": ["color@3.2.1", "", { "dependencies": { "color-convert": "^1.9.3", "color-string": "^1.6.0" } }, "sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA=="],
 
     "concat-stream/readable-stream": ["readable-stream@2.3.8", "", { "dependencies": { "core-util-is": "~1.0.0", "inherits": "~2.0.3", "isarray": "~1.0.0", "process-nextick-args": "~2.0.0", "safe-buffer": "~5.1.1", "string_decoder": "~1.1.1", "util-deprecate": "~1.0.1" } }, "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA=="],
+
+    "ecommerce-backend/ecommerce-backend": ["ecommerce-backend@file:.", {}],
+
+    "ecommerce-backend/ecommerce-backend": ["ecommerce-backend@file:.", {}],
 
     "express/cookie": ["cookie@0.7.2", "", {}, "sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w=="],
 

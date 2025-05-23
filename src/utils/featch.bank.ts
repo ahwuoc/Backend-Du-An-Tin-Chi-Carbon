@@ -54,7 +54,7 @@ export async function createPayOs(payos: IPayOs, data: IData): Promise<any> {
   const payload = {
     ...data,
     ...payos,
-    expiredAt: expired_at,
+    expired_at: expired_at,
     signature,
   };
 
