@@ -11,10 +11,6 @@ const HEADERS = {
   "x-client-id": CLIENT_ID,
   "x-api-key": API_KEY,
 };
-
-const currentTime = Math.floor(Date.now() / 1000);
-const expired_at = currentTime + 3600;
-
 function createSignature(data: IData, payos: IPayOs): string {
   const rawSignature = `amount=${payos.amount}&cancelUrl=${payos.cancelUrl}&description=${payos.description}&orderCode=${payos.orderCode}&returnUrl=${payos.returnUrl}`;
   return crypto
@@ -54,7 +50,6 @@ export async function createPayOs(payos: IPayOs, data: IData): Promise<any> {
   const payload = {
     ...data,
     ...payos,
-    expired_at: expired_at,
     signature,
   };
 
