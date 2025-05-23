@@ -1,11 +1,12 @@
 import { Router } from "express";
 import DonationController from "../controllers/donate.controller";
-const instance = new DonationController();
+
 const router = Router();
 
-router.post("/", instance.createDonation.bind(instance));
-router.get("/", instance.getDonations.bind(instance));
-router.get("/infor", instance.getInfoDonations.bind(instance));
-router.delete("/:id", instance.deleteDonations.bind(instance));
-router.put("/:id", instance.updateDonations.bind(instance));
+router.post("/", DonationController.createDonation);
+router.get("/orderCode/:id", DonationController.getDonationAndUpdateStatus);
+router.get("/", DonationController.getDonations);
+router.get("/infor", DonationController.getInfoDonations);
+router.delete("/:id", DonationController.deleteDonations);
+router.put("/:id", DonationController.updateDonations);
 export default router;

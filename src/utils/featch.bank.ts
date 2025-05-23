@@ -1,20 +1,10 @@
 import crypto from "crypto";
 import axios from "axios";
 import dotenv from "dotenv";
-
 dotenv.config();
-
-interface Order {
-  amount: number;
-  orderCode: number;
-  description: string;
-  [key: string]: any;
-}
-
 const CLIENT_ID = process.env.PAYOS_CLIENT_ID!;
 const API_KEY = process.env.PAYOS_API_KEY!;
 const CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY!;
-const baseUrl = process.env.FRONT_END_URL!;
 
 const HEADERS = {
   "Content-Type": "application/json",
@@ -25,41 +15,57 @@ const HEADERS = {
 const currentTime = Math.floor(Date.now() / 1000);
 const expired_at = currentTime + 3600;
 
-function createSignature(
-  order: Order,
-  cancelUrl: string,
-  returnUrl: string,
-): string {
-  const rawSignature = `amount=${order.amount}&cancelUrl=${cancelUrl}&description=${order.description}&orderCode=${order.orderCode}&returnUrl=${returnUrl}`;
+function createSignature(data: IData, payos: IPayOs): string {
+  const rawSignature = `amount=${payos.amount}&cancelUrl=${payos.cancelUrl}&description=${payos.description}&orderCode=${payos.orderCode}&returnUrl=${payos.returnUrl}`;
   return crypto
     .createHmac("sha256", CHECKSUM_KEY)
     .update(rawSignature)
     .digest("hex");
 }
+interface Item {
+  name: string;
+  quantity: number;
+  price: number;
+}
+// =======Require=====
+export interface IPayOs {
+  orderCode: number;
+  amount: number;
+  description: string;
+  cancelUrl: string;
+  returnUrl: string;
+}
+// =======No Require====
+export interface IData {
+  buyerName?: string;
+  buyerEmail?: string;
+  buyerPhone?: string;
+  buyerAddress?: string;
+  items?: Item[];
+}
 
-export async function createOrder(order: Order, url?: string): Promise<any> {
-  const fullurl = url ?? baseUrl;
-  const cancelUrl = `${fullurl}/huy-don`;
-  const returnUrl = `${fullurl}/hoan-thanh`;
-
-  if (!order.amount || !order.orderCode || !order.description) {
-    throw new Error("⚠️ Thiếu thông tin bắt buộc của order");
+export async function createPayOs(payos: IPayOs, data: IData): Promise<any> {
+  if (!CLIENT_ID || !API_KEY) {
+    console.log("Vui lòng điền CLIENT_ID và  API_KEY ");
+    return;
   }
-
-  const signature = createSignature(order, cancelUrl, returnUrl);
+  const signature = createSignature(data, payos);
 
   const payload = {
-    ...order,
-    expired_at,
-    cancelUrl,
-    returnUrl,
+    ...data,
+    ...payos,
+    expiredAt: expired_at,
     signature,
   };
 
-  // 🔍 Log rõ ràng hơn
-  console.log("📦 Callback URLs:", { cancelUrl, returnUrl });
-
-  console.log("📦 Payload gửi đến PayOS:", JSON.stringify(payload, null, 2));
+  console.log("📦 Callback URLs:", {
+    cancelUrl: payos.cancelUrl,
+    returnUrl: payos.returnUrl,
+  });
+  console.log(
+    "✅ Payload đúng định dạng gửi PayOS:",
+    JSON.stringify(payload, null, 2),
+  );
   console.log("📨 Headers:", HEADERS);
 
   try {

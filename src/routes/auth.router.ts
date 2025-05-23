@@ -4,7 +4,7 @@ import {
   type Response,
   type NextFunction,
   type RequestHandler,
-  type ErrorRequestHandler, // Thêm ErrorRequestHandler cho globalErrorHandler
+  type ErrorRequestHandler,
 } from "express";
 import AuthController from "../controllers/auth.controller";
 import rateLimit from "express-rate-limit";
@@ -21,8 +21,6 @@ interface RequestAuthentication extends Request {
 }
 
 const authController = new AuthController();
-
-// Sửa: Đảm bảo hàm trả về void sau khi gửi response hoặc gọi next()
 const handleValidationErrors = (
   req: Request,
   res: Response,
@@ -146,17 +144,11 @@ const rateLimitMessages = {
 
 const router = Router();
 
-router.post(
-  "/register",
-  limitRequest(rateLimitMessages.register, 60 * 60 * 1000, 100),
-  validateRegistration,
-  authController.register.bind(authController),
-);
+router.post("/register", authController.register.bind(authController));
 
 router.post(
   "/login",
   limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
-  validateLogin,
   authController.login.bind(authController),
 );
 

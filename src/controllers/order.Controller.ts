@@ -4,9 +4,9 @@ import { Product, type IProduct } from "../models/products.model";
 import type { IOrder } from "../models/order.model";
 import { sendMailRegisterCheckout } from "../utils/emailTemplates";
 import { sendEmail } from "../utils/sendEmail";
-import { createOrder } from "../utils/featch.bank";
 import mongoose from "mongoose";
 import Affiliate from "../models/affiliate.model";
+import { createPayOs, IData, IPayOs } from "../utils/featch.bank";
 
 type OrderSend = Partial<IOrder>;
 class OrderController {
@@ -47,25 +47,25 @@ class OrderController {
 
       const affiliate = await Affiliate.findOne({ userId });
       const referralCode = affiliate?.referralCode || null;
-
       const random6Digits = Math.floor(100000 + Math.random() * 900000);
-      const OrderBank = {
-        orderCode: random6Digits,
-        amount,
-        description: note,
-        buyerName,
-        buyerEmail: email,
-        buyerPhone,
+      const dataPayos: IData = {
         buyerAddress,
+        buyerName,
+        buyerPhone,
+        items: [
+          {
+            name: product.name,
+            quantity: 1,
+            price: amount,
+          },
+        ],
       };
-
       // FREE PRODUCT
       if (product.subscriptionTier === "free") {
-        const mailContent = sendMailRegisterCheckout(OrderBank);
+        const mailContent = sendMailRegisterCheckout(dataPayos, amount);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
-
         const orderData = new Order({
-          orderCode: OrderBank.orderCode,
+          orderCode: random6Digits,
           amount: 1,
           status: "success",
           referralCode,
@@ -80,21 +80,31 @@ class OrderController {
           linkthanhtoan: null,
           expiredAt: null,
         });
-
         console.log("Saving order:", orderData);
         await orderData.save();
         console.log("Order saved successfully:", orderData.orderCode);
-
         res.status(201).json(orderData);
         return;
       }
-      // ================Fix============
-      let baseUrl = req.headers.referer || req.headers.origin || "Unknown";
+      // ================Handler Base Url============
+      let baseUrl =
+        req.headers.referer?.toString() ||
+        req.headers.origin?.toString() ||
+        process.env.FRONT_END_URL;
+      if (!baseUrl) {
+        throw new Error("❌ Không xác định được baseUrl");
+      }
       baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-      // ==============End Fix======
-      const response = await createOrder(OrderBank, baseUrl);
+      const payos: IPayOs = {
+        amount: amount,
+        description: note,
+        cancelUrl: `${baseUrl}/that-bai`,
+        returnUrl: `${baseUrl}/thanh-cong`,
+        orderCode: random6Digits,
+      };
+      const response = await createPayOs(payos, dataPayos);
       if (response.code === "00") {
-        const mailContent = sendMailRegisterCheckout(OrderBank);
+        const mailContent = sendMailRegisterCheckout(dataPayos, amount);
         const emailResult = await sendEmail(email, "Gửi đơn hàng", mailContent);
         if (!emailResult.success) {
           console.error("Email failed:", emailResult.error);
@@ -117,11 +127,7 @@ class OrderController {
           createdAt: new Date(),
           buyerName,
         });
-
-        console.log("Saving order:", orderData);
         await orderData.save();
-        console.log("Order saved successfully:", orderData.orderCode);
-
         res.status(201).json(orderData);
         return;
       }

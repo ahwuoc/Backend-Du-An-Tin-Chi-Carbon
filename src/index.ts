@@ -1,10 +1,7 @@
 import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-// Load biến môi trường từ file .env
 dotenv.config();
-
-// Import các route
 import productRouter from "./routes/products.router";
 import consultationRouter from "./routes/consultation.router";
 import orderRouter from "./routes/order.router";
@@ -20,26 +17,13 @@ import affiliatepaymethodRouter from "./routes/affiliate-paymethod.router";
 import affiliatransactionRouter from "./routes/affiliate-transaction.router";
 import certificatesRouter from "./routes/certificate.router";
 import creditcarbonRouter from "./routes/credit-carbon.router";
-
-// Import models (chỉ cần gọi để khởi tạo)
-import "./models/users.model";
-import "./models/news.model";
-import "./models/affiliate.model";
-import "./models/consultation";
-import "./models/payment";
-import "./models/donate.model";
-import "./models/project.model";
-
-// Middleware và route cho xử lý lỗi 404
 import { notFoundHandler } from "./routes/notfound";
-import AuthController from "./controllers/auth.controller";
 const allowedOrigins = [
   "http://localhost:3000",
   "fe-theta-orcin.vercel.app",
   "fe-git-master-ahwuocs-projects.vercel.app",
   "fe-98au18ipf-ahwuocs-projects.vercel.app",
 ];
-const authController = new AuthController();
 const app = express();
 app.use(express.json());
 app.set("trust proxy", 1);
@@ -50,10 +34,6 @@ app.set("trust proxy", 1);
       origin: true,
       credentials: true,
     }),
-  );
-  app.get(
-    "/api/login/email/:access_token",
-    authController.LoginEmailAuth.bind(authController),
   );
   app.use("/api/auth", authRouter);
   app.use("/api/consultation", consultationRouter);
@@ -69,12 +49,8 @@ app.set("trust proxy", 1);
   app.use("/api/certificates", certificatesRouter);
   app.use("/api/carboncredits", creditcarbonRouter);
   app.use("/api/news", newsRouter);
-
-  // Middleware xử lý route không tồn tại
   app.use(notFoundHandler);
-
-  // Start server
-  const port = process.env.PORT || 5000;
+  const port = process.env.PORT;
   app.listen(port, () => {
     console.log(`🚀 Server running at http://localhost:${port}`);
   });

@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-// 1. Interface mô tả shape dữ liệu
 export interface IUser {
   email: string;
   password: string;

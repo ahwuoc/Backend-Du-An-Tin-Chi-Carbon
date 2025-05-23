@@ -12,6 +12,9 @@ import { Project } from "../models/project.model";
 import Order from "../models/order.model";
 import AffiliateModel from "../models/affiliate.model";
 import { ProjectCarbon } from "../models/project-carbon.model";
+import { RegisterForm } from "../validate/register.form";
+import { validateFlow } from "../fsm/base-fsm";
+import { LoginForm } from "../validate/login.form";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
@@ -30,7 +33,7 @@ type ExpressHandler = (
   next: NextFunction,
 ) => Promise<void> | void;
 
-class AuthController {
+export default class AuthController {
   private userModel = UserModel;
 
   private createToken(
@@ -182,36 +185,15 @@ class AuthController {
 
   public register: ExpressHandler = async (req, res, next) => {
     const { email, password, name, role = "user" } = req.body;
-    if (!email || !password || !name) {
+    const errors = await validateFlow(req.body, RegisterForm);
+    if (errors.length > 0) {
       res.status(400).json({
-        success: false,
-        error: "Thiếu thông tin bắt buộc (email, password, name).",
-      });
-      return;
-    }
-    if (!validator.isEmail(email)) {
-      res.status(400).json({
-        success: false,
-        error: "Email không hợp lệ.",
-      });
-      return;
-    }
-    if (password.length < 6) {
-      res.status(400).json({
-        success: false,
-        error: "Mật khẩu phải có ít nhất 6 ký tự.",
+        message: "Đăng ký thất bại",
+        errors: errors,
       });
       return;
     }
     try {
-      const existingUser = await this.userModel.findOne({ email });
-      if (existingUser) {
-        res.status(409).json({
-          success: false,
-          error: "Người dùng đã tồn tại với email này.",
-        });
-        return;
-      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await this.userModel.create({
         email,
@@ -220,8 +202,6 @@ class AuthController {
         role,
         createdAt: new Date(),
       });
-
-      // Nếu tạo user không thành công
       if (!newUser) {
         res.status(409).json({
           success: false,
@@ -229,26 +209,19 @@ class AuthController {
         });
         return;
       }
-
       await AffiliateModel.create({
         userId: newUser._id,
       });
       res.status(201).json({
         success: true,
         message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
-        user: {
-          id: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-        },
       });
-
       return;
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
       res.status(500).json({
         success: false,
-        error: error.message || "Lỗi hệ thống khi đăng ký.",
+        error: error || "Lỗi hệ thống khi đăng ký.",
       });
       return;
     }
@@ -363,10 +336,12 @@ class AuthController {
 
   public login: ExpressHandler = async (req, res, next) => {
     const { email, password } = req.body;
-    if (!email || !password) {
-      res
-        .status(400)
-        .json({ success: false, error: "Thiếu email hoặc mật khẩu." });
+    const errors = await validateFlow(req.body, LoginForm);
+    if (errors.length > 0) {
+      res.status(400).json({
+        message: "Đăng nhập thất bại",
+        errors: errors,
+      });
       return;
     }
     try {
@@ -377,7 +352,6 @@ class AuthController {
           .json({ success: false, error: "Email hoặc mật khẩu không đúng." });
         return;
       }
-
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         res
@@ -629,5 +603,3 @@ class AuthController {
     res.status(200).json({ success: true, message: "Đăng xuất thành công." });
   };
 }
-
-export default AuthController;

@@ -1,3 +1,5 @@
+import { IData } from "./featch.bank";
+
 export const verifyEmailContent = (link: string) => {
   return `
       <html>
@@ -274,7 +276,7 @@ export const sendMailConsultationFeedback = (
     </html>
   `;
 };
-export const sendMailRegisterCheckout = (product: any) => {
+export const sendMailRegisterCheckout = (data: IData, amount: number) => {
   return `
     <!DOCTYPE html>
     <html lang="vi">
@@ -305,16 +307,16 @@ export const sendMailRegisterCheckout = (product: any) => {
                 <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Thông tin đơn hàng</h3>
                 <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px;">
                   <p style="margin: 4px 0;"><span style="font-weight: 500;">Giá tiền:</span> ${formatCurrency(
-                    product?.amount ?? 0,
+                    amount ?? 0,
                   )}</p>
                   <p style="margin: 4px 0;"><span style="font-weight: 500;">Họ tên:</span> ${
-                    product.buyerName || "N/A"
+                    data.buyerName || "N/A"
                   }</p>
                   <p style="margin: 4px 0;"><span style="font-weight: 500;">Email:</span> ${
-                    product.buyerEmail || "N/A"
+                    data.buyerEmail || "N/A"
                   }</p>
                   <p style="margin: 4px 0;"><span style="font-weight: 500;">Số điện thoại:</span> ${
-                    product.buyerPhone || "N/A"
+                    data.buyerPhone || "N/A"
                   }</p>
                 </div>
               </div>
