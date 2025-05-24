@@ -35,6 +35,10 @@ app.set("trust proxy", 1);
       credentials: true,
     }),
   );
+  app.get("/", (req, res) => {
+    console.log("chay toi day");
+    return;
+  });
   app.use("/api/auth", authRouter);
   app.use("/api/consultation", consultationRouter);
   app.use("/api/projects", projectRouter);
