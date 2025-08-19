@@ -1,12 +1,16 @@
 import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import swaggerUi from 'swagger-ui-express';
 
 // Load environment variables
 dotenv.config();
 
 // Database connection
 import connectDB from "./config/db";
+
+// Swagger documentation
+import { specs } from "./config/swagger";
 
 // Import routes
 import authRouter from "./routes/auth.router";
@@ -104,6 +108,12 @@ app.get("/", (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Tin Chi Carbon API Documentation'
+}));
 
 // API routes
 app.use("/api/auth", authRouter);
