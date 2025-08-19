@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "bun run dist/index.js",
+    "postinstall": "bun run build"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +23,7 @@
     "cookies-next": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "ecommerce-backend": ".",
+
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-validator": "^7.2.1",

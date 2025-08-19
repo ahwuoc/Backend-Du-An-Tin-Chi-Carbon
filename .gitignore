@@ -1,6 +1,6 @@
 # Node / Bun deps
 node_modules/
-bun.lockb
+bun.lock
 pnpm-lock.yaml
 yarn.lock
 
