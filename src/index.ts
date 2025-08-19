@@ -33,15 +33,46 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "fe-theta-orcin.vercel.app",
-  "fe-git-master-ahwuocs-projects.vercel.app",
-  "fe-98au18ipf-ahwuocs-projects.vercel.app",
+  "http://localhost:5173", // Vite dev server
+  "http://localhost:4173", // Vite preview
+  "https://fe-theta-orcin.vercel.app",
+  "https://fe-git-master-ahwuocs-projects.vercel.app",
+  "https://fe-98au18ipf-ahwuocs-projects.vercel.app",
+  "https://fe-mwxfp3lne-ahwuocs-projects.vercel.app",
+  "https://tin-chi-carbon-frontend.vercel.app", 
+  "https://tin-chi-carbon.vercel.app", 
+  "https://www.carboncreditvietnam.vn",
+  "https://carboncreditvietnam.vn",
+  "https://www.tinchicacbonvietnam.vn",
+  "https://www.tinchicarbonvietnam.vn",
+  "https://tinchicacbonvietnam.vn",
+  "https://tinchicarbonvietnam.vn",
 ];
 
 const corsOptions = {
-  origin: NODE_ENV === "production" ? allowedOrigins : true,
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (NODE_ENV === "development") {
+      // Allow all origins in development
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    
+    // Log blocked origins for debugging
+    console.log(`CORS blocked origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
 };
 
 // Create Express app
@@ -51,7 +82,26 @@ const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", 1);
+
+// CORS middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Add headers middleware
+app.use((req: Request, res: Response, next: any) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Health check endpoint
 app.get("/", (req: Request, res: Response) => {
