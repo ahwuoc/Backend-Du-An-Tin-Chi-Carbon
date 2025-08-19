@@ -144,11 +144,12 @@ const rateLimitMessages = {
 
 const router = Router();
 
-router.post("/register", (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next));
+router.post("/register", validateRegistration, (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next));
 
 router.post(
   "/login",
   limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
+  validateLogin,
   (req: Request, res: Response, next: NextFunction) => authController.login(req, res, next),
 );
 

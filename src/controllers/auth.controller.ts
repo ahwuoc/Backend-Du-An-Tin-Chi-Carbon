@@ -116,9 +116,17 @@ export default class AuthController {
     const { email, password, name, role = "user" } = req.body;
     const errors = await AuthService.validateRegistration(req.body);
     if (errors.length > 0) {
+      console.log("Validation errors:", errors);
       res.status(400).json({
-        message: "Đăng ký thất bại",
+        success: false,
+        message: "Đăng ký thất bại - Dữ liệu không hợp lệ",
         errors: errors,
+        receivedData: {
+          email: email ? "provided" : "missing",
+          password: password ? "provided" : "missing", 
+          name: name ? "provided" : "missing",
+          role: role
+        }
       });
       return;
     }
@@ -161,23 +169,35 @@ export default class AuthController {
         res.status(400).json({
           success: false,
           message: error.message,
+          errorType: "DUPLICATE_EMAIL"
         });
         return;
       }
       res.status(500).json({
         success: false,
         message: "Lỗi máy chủ nội bộ",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined
       });
     }
   };
 
   public login: ExpressHandler = async (req, res, next) => {
     const { email, password } = req.body;
+    
+    // Log request body for debugging
+    console.log("Login request body:", req.body);
+    
     const errors = await AuthService.validateLogin(req.body);
     if (errors.length > 0) {
+      console.log("Login validation errors:", errors);
       res.status(400).json({
-        message: "Đăng nhập thất bại",
+        success: false,
+        message: "Đăng nhập thất bại - Dữ liệu không hợp lệ",
         errors: errors,
+        receivedData: {
+          email: email ? "provided" : "missing",
+          password: password ? "provided" : "missing"
+        }
       });
       return;
     }
@@ -188,6 +208,7 @@ export default class AuthController {
         res.status(401).json({
           success: false,
           message: "Email hoặc mật khẩu không đúng",
+          errorType: "INVALID_CREDENTIALS"
         });
         return;
       }
@@ -200,6 +221,7 @@ export default class AuthController {
         res.status(401).json({
           success: false,
           message: "Email hoặc mật khẩu không đúng",
+          errorType: "INVALID_CREDENTIALS"
         });
         return;
       }
