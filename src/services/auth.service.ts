@@ -83,7 +83,7 @@ export class AuthService implements IAuthService {
   }
 
   public async findUserByEmail(email: string): Promise<any> {
-    return await this.userModel.findOne({ email });
+    return await this.userModel.findOne({ email }).select("+password");
   }
 
   public async updateUser(id: string, updateData: any): Promise<any> {
