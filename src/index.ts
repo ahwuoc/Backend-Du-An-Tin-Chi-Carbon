@@ -33,38 +33,9 @@ import { notFoundHandler } from "./routes/notfound.router";
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
-// CORS configuration
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:5173", // Vite dev server
-  "http://localhost:4173", // Vite preview
-  "https://fe-theta-orcin.vercel.app",
-  "https://fe-git-master-ahwuocs-projects.vercel.app",
-  "https://fe-98au18ipf-ahwuocs-projects.vercel.app",
-  "https://fe-mwxfp3lne-ahwuocs-projects.vercel.app",
-  "https://tin-chi-carbon-frontend.vercel.app", 
-  "https://tin-chi-carbon.vercel.app", 
-  "https://www.carboncreditvietnam.vn",
-  "https://carboncreditvietnam.vn",
-  "https://www.tinchicacbonvietnam.vn",
-  "https://www.tinchicarbonvietnam.vn",
-  "https://tinchicacbonvietnam.vn",
-  "https://tinchicarbonvietnam.vn",
-];
-
+// CORS configuration - Allow all origins
 const corsOptions = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    if (!origin) return callback(null, true);
-    if (NODE_ENV === "development") {
-      return callback(null, true);
-    }
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
-    console.log(`CORS blocked origin: ${origin}`);
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Allow all origins
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -72,7 +43,6 @@ const corsOptions = {
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
 };
 
-// Create Express app
 const app = express();
 
 // Middleware
