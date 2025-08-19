@@ -61,34 +61,34 @@ export const isEmpty = (value: string): boolean => {
  */
 export const VALIDATION_CONDITIONS = {
   // Email validations
-  emailRequired: (data: any) => isEmpty(data.email),
-  emailValid: (data: any) => !isEmpty(data.email) && !isValidEmail(data.email),
+  emailRequired: (data: any) => !isEmpty(data.email),
+  emailValid: (data: any) => isEmpty(data.email) || isValidEmail(data.email),
   emailExists: async (data: any) => await isEmailExists(data.email),
   emailNotExists: async (data: any) => await isEmailNotExists(data.email),
   
   // Password validations
-  passwordRequired: (data: any) => isEmpty(data.password),
-  passwordMinLength: (data: any) => !isEmpty(data.password) && data.password.length < 8,
-  passwordStrong: (data: any) => !isEmpty(data.password) && !isStrongPassword(data.password),
+  passwordRequired: (data: any) => !isEmpty(data.password),
+  passwordMinLength: (data: any) => isEmpty(data.password) || data.password.length >= 8,
+  passwordStrong: (data: any) => isEmpty(data.password) || isStrongPassword(data.password),
   
   // Name validations
-  nameRequired: (data: any) => isEmpty(data.name),
+  nameRequired: (data: any) => !isEmpty(data.name),
   
   // Phone validations
-  phoneValid: (data: any) => !isEmpty(data.phone) && !isValidPhone(data.phone),
+  phoneValid: (data: any) => isEmpty(data.phone) || isValidPhone(data.phone),
   
   // Number validations
-  quantityRequired: (data: any) => !data.quantity,
-  quantityPositive: (data: any) => data.quantity && !isPositiveNumber(data.quantity),
+  quantityRequired: (data: any) => !!data.quantity,
+  quantityPositive: (data: any) => !data.quantity || isPositiveNumber(data.quantity),
   
   // Other validations
-  titleRequired: (data: any) => isEmpty(data.title),
-  contentRequired: (data: any) => isEmpty(data.content),
-  categoryRequired: (data: any) => isEmpty(data.category),
-  typeRequired: (data: any) => isEmpty(data.type),
-  statusRequired: (data: any) => isEmpty(data.status),
-  descriptionRequired: (data: any) => isEmpty(data.description),
-  addressRequired: (data: any) => isEmpty(data.buyerAddress),
-  amountRequired: (data: any) => !data.amount,
-  amountPositive: (data: any) => data.amount && !isPositiveNumber(data.amount),
+  titleRequired: (data: any) => !isEmpty(data.title),
+  contentRequired: (data: any) => !isEmpty(data.content),
+  categoryRequired: (data: any) => !isEmpty(data.category),
+  typeRequired: (data: any) => !isEmpty(data.type),
+  statusRequired: (data: any) => !isEmpty(data.status),
+  descriptionRequired: (data: any) => !isEmpty(data.description),
+  addressRequired: (data: any) => !isEmpty(data.buyerAddress),
+  amountRequired: (data: any) => !!data.amount,
+  amountPositive: (data: any) => !data.amount || isPositiveNumber(data.amount),
 } as const;
