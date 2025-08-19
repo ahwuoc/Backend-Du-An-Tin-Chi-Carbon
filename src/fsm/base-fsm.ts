@@ -5,14 +5,14 @@ export type ConditionFn<T> = (formData: T) => boolean | Promise<boolean>;
 export interface FieldRule<T> {
   condition?: ConditionFn<T>;
   error: string;
-  required?: boolean; // Field bắt buộc
-  stopOnError?: boolean; // Dừng validation khi gặp lỗi này
+  required?: boolean;
+  stopOnError?: boolean;
 }
 
 export type FieldError = {
   field: string;
   message: string;
-  code?: string; // Error code để frontend xử lý
+  code?: string;
 };
 
 export type FormRules<T> = {
@@ -20,9 +20,9 @@ export type FormRules<T> = {
 };
 
 export type ValidationOptions = {
-  stopOnFirstError?: boolean; // Dừng khi gặp lỗi đầu tiên
-  timeout?: number; // Timeout cho async operations (ms)
-  validateRequiredFirst?: boolean; // Validate required fields trước
+  stopOnFirstError?: boolean;
+  timeout?: number;
+  validateRequiredFirst?: boolean;
 };
 
 export async function validateFlow<T>(
@@ -39,7 +39,6 @@ export async function validateFlow<T>(
   const errors: FieldError[] = [];
   
   try {
-    // Validate required fields first if option is enabled
     if (validateRequiredFirst) {
       for (const key of Object.keys(rules) as (keyof T)[]) {
         const fieldRules = rules[key];
@@ -64,19 +63,16 @@ export async function validateFlow<T>(
       }
     }
     
-    // Validate all other rules
     for (const key of Object.keys(rules) as (keyof T)[]) {
       const fieldRules = rules[key];
       
       for (const rule of fieldRules) {
-        // Skip required validation if already done
         if (validateRequiredFirst && rule.required) continue;
         
         try {
           let isValid = true;
           
           if (rule.condition) {
-            // Handle async conditions with timeout
             const conditionPromise = Promise.resolve(rule.condition(data));
             const timeoutPromise = new Promise<boolean>((_, reject) => {
               setTimeout(() => reject(new Error('Validation timeout')), timeout);
@@ -85,7 +81,6 @@ export async function validateFlow<T>(
             isValid = await Promise.race([conditionPromise, timeoutPromise]);
           }
           
-          // Logic đã được đảo ngược: true = hợp lệ, false = có lỗi
           if (!isValid) {
             errors.push({
               field: String(key),
@@ -96,7 +91,7 @@ export async function validateFlow<T>(
             if (rule.stopOnError || stopOnFirstError) {
               return errors;
             }
-            break; // Dừng validation cho field này
+            break;
           }
         } catch (error) {
           console.error(`Validation error for field ${String(key)}:`, error);
@@ -122,9 +117,7 @@ export async function validateFlow<T>(
   return errors;
 }
 
-// Helper functions for common validations
 export const ValidationHelpers = {
-  // Required field validation
   required: <T>(field: keyof T) => (data: T): boolean => {
     const value = data[field];
     return !!(value && 
@@ -132,22 +125,19 @@ export const ValidationHelpers = {
       (!Array.isArray(value) || value.length > 0));
   },
   
-  // Email validation
   email: <T>(field: keyof T) => (data: T): boolean => {
     const value = data[field] as string;
-    if (!value) return true; // Skip if empty (use required for mandatory)
+    if (!value) return true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
   },
   
-  // Min length validation
   minLength: <T>(field: keyof T, min: number) => (data: T): boolean => {
     const value = data[field] as string;
     if (!value) return true;
     return value.length >= min;
   },
   
-  // Number range validation
   numberRange: <T>(field: keyof T, min?: number, max?: number) => (data: T): boolean => {
     const value = data[field] as number;
     if (value === undefined || value === null) return true;
@@ -156,7 +146,6 @@ export const ValidationHelpers = {
     return true;
   },
   
-  // Cross-field validation
   crossField: <T>(field1: keyof T, field2: keyof T, validator: (val1: any, val2: any) => boolean) => 
     (data: T): boolean => {
       return validator(data[field1], data[field2]);

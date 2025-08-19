@@ -148,8 +148,8 @@ export default class AuthController {
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: false,
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
 
       res.status(201).json({
@@ -176,7 +176,7 @@ export default class AuthController {
       res.status(500).json({
         success: false,
         message: "Lỗi máy chủ nội bộ",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined
+        error: error.message
       });
     }
   };
@@ -184,7 +184,6 @@ export default class AuthController {
   public login: ExpressHandler = async (req, res, next) => {
     const { email, password } = req.body;
     
-    // Log request body for debugging
     console.log("Login request body:", req.body);
     
     const errors = await AuthService.validateLogin(req.body);
@@ -213,6 +212,22 @@ export default class AuthController {
         return;
       }
 
+      console.log("User found:", { 
+        id: user._id, 
+        email: user.email, 
+        hasPassword: !!user.password,
+        passwordType: typeof user.password 
+      });
+
+      if (!user.password) {
+        res.status(401).json({
+          success: false,
+          message: "Tài khoản không hợp lệ - thiếu mật khẩu",
+          errorType: "INVALID_ACCOUNT"
+        });
+        return;
+      }
+
       const isPasswordValid = await AuthService.comparePassword(
         password,
         user.password,
@@ -234,8 +249,8 @@ export default class AuthController {
 
       res.cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: false,
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
 
       res.status(200).json({
