@@ -144,43 +144,43 @@ const rateLimitMessages = {
 
 const router = Router();
 
-router.post("/register", authController.register.bind(authController));
+router.post("/register", (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next));
 
 router.post(
   "/login",
   limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
-  authController.login.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.login(req, res, next),
 );
 
 router.get(
   "/login/email/:access_token",
-  authController.LoginEmailAuth.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.LoginEmailAuth(req, res, next),
 );
 
 router.post(
   "/logout",
-  authController.authenticate.bind(authController),
-  authController.logout.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.authenticate(req, res, next),
+  (req: Request, res: Response, next: NextFunction) => authController.logout(req, res, next),
 );
 
 router.post(
   "/forgot-password",
   limitRequest(rateLimitMessages.forgotPassword, 60 * 60 * 1000, 5),
   validateForgotPassword,
-  authController.forgotPassword.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.forgotPassword(req, res, next),
 );
 
 router.post(
   "/reset-password",
   validateResetPassword,
-  authController.resetPassword.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.resetPassword(req, res, next),
 );
 
 router.post(
   "/change-password",
-  authController.authenticate.bind(authController),
+  (req: Request, res: Response, next: NextFunction) => authController.authenticate(req, res, next),
   validateChangePassword,
-  authController.changePassword.bind(authController),
+  (req: RequestAuthentication, res: Response, next: NextFunction) => authController.changePassword(req as any, res, next),
 );
 router.get(
   "/users/me",

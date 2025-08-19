@@ -4,8 +4,8 @@ import type { IConsultation } from "../types/consultation";
 import {
   sendMailConsultationFeedback,
   sendMailRegisterCheckout,
-} from "../utils/emailTemplates";
-import { sendEmail } from "../utils/sendEmail";
+} from "../utils/email/emailTemplates";
+import { sendEmail } from "../utils/email/sendEmail";
 
 interface ConsultationRequest extends Request {
   body: { formData: IConsultation }; // Thêm formData vào trong body

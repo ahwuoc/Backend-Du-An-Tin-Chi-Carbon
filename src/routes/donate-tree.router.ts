@@ -1,5 +1,5 @@
 import { Router } from "express";
-import DonationController from "../controllers/donate.controller";
+import DonationController from "../controllers/donate-tree.controller";
 
 const router = Router();
 

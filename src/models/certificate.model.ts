@@ -1,14 +1,17 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
+import { ICertificate } from "../types/certificate";
 
-const CertificateSchema = new mongoose.Schema({
+export interface ICertificateDocument extends ICertificate, Document {}
+
+const CertificateSchema: Schema<ICertificateDocument> = new Schema({
   name: { type: String, required: true },
   type: { type: String, enum: ["international_certificates"], required: true },
   description: { type: String, required: true },
   purchaseDate: { type: Date, required: true },
   expiryDate: { type: Date, required: true },
   status: { type: String, enum: ["active", "expired"], required: true },
-  image: { type: String }, // ảnh thumbnail hoặc minh hoạ
-  certificateImage: { type: String, default: "" }, // ảnh chính thức của chứng chỉ
+  image: { type: String }, 
+  certificateImage: { type: String, default: "" }, 
   features: { type: [String], default: [] },
   customFeatureName: { type: String, default: "" },
   price: { type: Number, required: true },
@@ -34,4 +37,4 @@ const CertificateSchema = new mongoose.Schema({
   },
 });
 
-export const Certificate = mongoose.model("Certificate", CertificateSchema);
+export const Certificate: Model<ICertificateDocument> = mongoose.model<ICertificateDocument>("Certificate", CertificateSchema);

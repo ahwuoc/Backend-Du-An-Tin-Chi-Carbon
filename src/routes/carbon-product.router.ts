@@ -3,7 +3,7 @@ import {
   createCarbonProduct,
   getAllCarbonProducts,
   getCarbonProductById,
-} from "../controllers/carbonproduct.controller";
+} from "../controllers/carbon-product.controller";
 
 const router = Router();
 

@@ -1,7 +1,9 @@
-import mongoose, { Schema, Document, Model } from "mongoose"; // Import Model
-import IDonation from "../types/donation";
+import mongoose, { Schema, Document, Model } from "mongoose";
+import { IDonation } from "../types/donation";
 
-const DonationSchema: Schema = new Schema({
+export interface IDonationDocument extends IDonation, Document {}
+
+const DonationSchema: Schema<IDonationDocument> = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: "User", require: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -21,4 +23,4 @@ const DonationSchema: Schema = new Schema({
 });
 
 export default (mongoose.models.Donation ||
-  mongoose.model<IDonation>("Donation", DonationSchema)) as Model<IDonation>;
+  mongoose.model<IDonationDocument>("Donation", DonationSchema)) as Model<IDonationDocument>;

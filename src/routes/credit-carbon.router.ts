@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { CarbonCreditController } from "../controllers/creditcarbon.controller";
+import { CarbonCreditController } from "../controllers/credit-carbon.controller";
 
 const router = Router();
 

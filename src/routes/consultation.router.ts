@@ -3,7 +3,7 @@ import {
   registerConsultation,
   getAllConsultation,
   deleteConsultation,
-} from "../controllers/consultationController";
+} from "../controllers/consultation.controller";
 
 const router = Router();
 

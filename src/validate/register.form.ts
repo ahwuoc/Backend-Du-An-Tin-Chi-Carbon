@@ -1,37 +1,37 @@
 import { FormRules } from "../fsm/base-fsm";
-import { UserModel } from "../models/users.model";
-import type IUser from "../types/user";
-
-type IRegisterForm = Pick<IUser, "name" | "email" | "password">;
+import { IRegisterForm } from "../types/validation";
+import { VALIDATION_CONDITIONS } from "../utils/validation";
+import { VALIDATION_MESSAGES } from "../types/validation";
 
 export const RegisterForm: FormRules<IRegisterForm> = {
   name: [
     {
-      condition: (data) => !data.name,
-      error: "Vui lòng nhập tên",
+      condition: VALIDATION_CONDITIONS.nameRequired,
+      error: VALIDATION_MESSAGES.REQUIRED.NAME,
     },
   ],
   email: [
     {
-      condition: (data) => !data.email,
-      error: "Vui lòng nhập email",
+      condition: VALIDATION_CONDITIONS.emailRequired,
+      error: VALIDATION_MESSAGES.REQUIRED.EMAIL,
     },
     {
-      condition: async (data) => {
-        const user = await UserModel.findOne({ email: data.email });
-        return user;
-      },
-      error: "Email đã tồn tại trên hệ thống",
+      condition: VALIDATION_CONDITIONS.emailValid,
+      error: VALIDATION_MESSAGES.EMAIL.INVALID,
+    },
+    {
+      condition: VALIDATION_CONDITIONS.emailNotExists,
+      error: VALIDATION_MESSAGES.EMAIL.EXISTS,
     },
   ],
   password: [
     {
-      condition: (data) => !data.password,
-      error: "Vui lòng nhập password",
+      condition: VALIDATION_CONDITIONS.passwordRequired,
+      error: VALIDATION_MESSAGES.REQUIRED.PASSWORD,
     },
     {
-      condition: (data) => data.password.length < 8,
-      error: "Vui lòng điền password lớn hơn 8 ký tự",
+      condition: VALIDATION_CONDITIONS.passwordMinLength,
+      error: VALIDATION_MESSAGES.PASSWORD.MIN_LENGTH,
     },
   ],
 };

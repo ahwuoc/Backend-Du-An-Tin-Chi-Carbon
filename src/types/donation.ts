@@ -1,12 +1,44 @@
-interface IDonation extends Document {
+import { Types } from "mongoose";
+
+export interface IDonation {
+  userId: Types.ObjectId;
   name: string;
   email: string;
   phone?: string;
   quantity: number;
   note?: string;
-  userId: string;
-  treeCount: number;
-  totalAmount?: number;
+  totalAmount: number;
   createdAt?: Date;
+  expiredAt?: Date;
+  checkoutUrl?: string;
+  orderCode?: string;
+  status: "pending" | "success";
+  updatedAt?: Date;
 }
-export default IDonation;
+
+export interface IDonationCreate {
+  userId: Types.ObjectId;
+  name: string;
+  email: string;
+  phone?: string;
+  quantity: number;
+  note?: string;
+  totalAmount: number;
+  expiredAt?: Date;
+  checkoutUrl?: string;
+  orderCode?: string;
+  status?: "pending" | "success";
+}
+
+export interface IDonationUpdate {
+  name?: string;
+  email?: string;
+  phone?: string;
+  quantity?: number;
+  note?: string;
+  totalAmount?: number;
+  expiredAt?: Date;
+  checkoutUrl?: string;
+  orderCode?: string;
+  status?: "pending" | "success";
+}

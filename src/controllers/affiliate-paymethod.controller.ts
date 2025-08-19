@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-import AffiliatePaymentMethod, {
-  type IAffiliatePaymentMethod,
-} from "../models/affiliate-paymethod.model";
+import AffiliatePaymentMethod from "../models/affiliate-paymethod.model";
+import type { IAffiliatePaymentMethod } from "../types/affiliate-paymethod";
 import { type IPaymentMethod } from "../models/paymethod.model";
 import Affiliate from "../models/affiliate.model";
 

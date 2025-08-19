@@ -1,12 +1,10 @@
 import type { Request, Response } from "express";
-import News from "../models/news.model";
+import { NewsService } from "../services";
 
 class NewsController {
   async getAllNews(req: Request, res: Response) {
     try {
-      const news = await News.find()
-        .sort({ createdAt: -1 })
-        .populate("userId", "name");
+      const news = await NewsService.getAllNews();
       res.status(200).json({ status: "success", data: news });
     } catch (error: any) {
       res.status(500).json({
@@ -18,12 +16,12 @@ class NewsController {
 
   async getNewsById(req: Request, res: Response) {
     try {
-      console.log("req.params.id", req.params.id);
-      const news = await News.findById(req.params.id);
+      const news = await NewsService.getNewsById(req.params.id);
       if (!news) {
         res
           .status(404)
           .json({ status: "error", message: "Không tìm thấy tin tức" });
+        return;
       }
       res.status(200).json({ status: "success", data: news });
     } catch (error: any) {
@@ -36,26 +34,17 @@ class NewsController {
 
   async createNews(req: Request, res: Response) {
     try {
-      const { title, content, userId, category, status, image, tags } =
-        req.body;
-      console.log(req.body);
-      if (!title || !content || !userId || !category) {
+      const newsData = req.body;
+      const validationErrors = NewsService.validateNewsData(newsData);
+      
+      if (validationErrors.length > 0) {
         res
           .status(400)
-          .json({ status: "error", message: "Thiếu thông tin bắt buộc" });
+          .json({ status: "error", message: "Dữ liệu không hợp lệ", details: validationErrors });
+        return;
       }
 
-      const newNews = new News({
-        title,
-        content,
-        userId,
-        category,
-        status,
-        image,
-        tags,
-      });
-
-      const savedNews = await newNews.save();
+      const savedNews = await NewsService.createNews(newsData);
       res.status(201).json({ status: "success", data: savedNews });
     } catch (error: any) {
       res.status(500).json({
@@ -67,25 +56,24 @@ class NewsController {
 
   async updateNews(req: Request, res: Response) {
     try {
-      const { title, content, userId, category, status, image, tags } =
-        req.body;
-
-      if (!title || !content || !userId || !category || !status) {
+      const { id } = req.params;
+      const newsData = req.body;
+      const validationErrors = NewsService.validateNewsData(newsData);
+      
+      if (validationErrors.length > 0) {
         res
           .status(400)
-          .json({ status: "error", message: "Thiếu thông tin bắt buộc" });
+          .json({ status: "error", message: "Dữ liệu không hợp lệ", details: validationErrors });
+        return;
       }
 
-      const updatedNews = await News.findByIdAndUpdate(
-        req.params.id,
-        { title, content, userId, category, status, image, tags },
-        { new: true, runValidators: true }
-      );
+      const updatedNews = await NewsService.updateNews(id, newsData);
 
       if (!updatedNews) {
         res
           .status(404)
           .json({ status: "error", message: "Không tìm thấy tin tức" });
+        return;
       }
 
       res.status(200).json({ status: "success", data: updatedNews });
@@ -99,17 +87,17 @@ class NewsController {
 
   async deleteNews(req: Request, res: Response) {
     try {
-      const deletedNews = await News.findByIdAndDelete(req.params.id);
-
-      if (!deletedNews) {
+      const { id } = req.params;
+      const isDeleted = await NewsService.deleteNews(id);
+      
+      if (!isDeleted) {
         res
           .status(404)
           .json({ status: "error", message: "Không tìm thấy tin tức" });
+        return;
       }
 
-      res
-        .status(200)
-        .json({ status: "success", message: "Xóa tin tức thành công" });
+      res.status(200).json({ status: "success", message: "Xóa tin tức thành công" });
     } catch (error: any) {
       res.status(500).json({
         status: "error",

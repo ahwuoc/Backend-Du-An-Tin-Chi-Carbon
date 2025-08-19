@@ -2,8 +2,8 @@ import { Types } from "mongoose";
 import Affiliate from "../models/affiliate.model";
 import type { Request, Response } from "express";
 import { UserModel } from "../models/users.model";
-import { sendEmail } from "../utils/sendEmail";
-import { templateAfifliate } from "../utils/emailTemplates";
+import { sendEmail } from "../utils/email/sendEmail";
+import { templateAfifliate } from "../utils/email/emailTemplates";
 import AffiliatePaymentMethod from "../models/affiliate-paymethod.model";
 class AffiliateController {
   async createAffiliate(req: Request, res: Response) {

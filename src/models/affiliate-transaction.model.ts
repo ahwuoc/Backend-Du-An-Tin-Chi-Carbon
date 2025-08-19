@@ -1,14 +1,7 @@
-import mongoose, { Schema, Document, Types, Model } from "mongoose"; // Import Model
+import mongoose, { Schema, Document, Model } from "mongoose";
+import { IAffiliateTransaction } from "../types/affiliate-transaction";
 
-export interface IAffiliateTransaction extends Document {
-  affiliateId: Types.ObjectId;
-  customer: string;
-  product: string;
-  amount: number;
-  commission: number;
-  status: "Đã thanh toán" | "Đang xử lý";
-  date: Date;
-}
+export interface IAffiliateTransactionDocument extends IAffiliateTransaction, Document {}
 
 const AffiliateTransactionSchema: Schema = new Schema(
   {
@@ -55,8 +48,8 @@ const AffiliateTransactionSchema: Schema = new Schema(
 );
 
 const AffiliateTransaction = (mongoose.models.AffiliateTransaction ||
-  mongoose.model<IAffiliateTransaction>(
+  mongoose.model<IAffiliateTransactionDocument>(
     "AffiliateTransaction",
     AffiliateTransactionSchema
-  )) as Model<IAffiliateTransaction>; 
+  )) as Model<IAffiliateTransactionDocument>; 
 export default AffiliateTransaction;

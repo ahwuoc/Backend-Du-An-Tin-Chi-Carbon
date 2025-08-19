@@ -1,15 +1,12 @@
 import express from "express";
-import OrderController from "../controllers/order.Controller";
+import OrderController from "../controllers/order.controller";
 
 const router = express.Router();
 
 router.post("/", OrderController.create);
-router.get("/", OrderController.getAll);
-router.get("/:id", OrderController.getById);
-router.put("/:id", OrderController.update);
-router.delete("/:orderCode", OrderController.delete);
-router.delete("/id/:id", OrderController.deleteId);
-router.get("/user/:userId", OrderController.getProjectForOrder);
-router.get("/info/:userId", OrderController.getInfo);
-router.get("/filter/:id", OrderController.getFilterOrder);
+router.get("/", OrderController.getAllOrders);
+router.get("/:id", OrderController.getOrderById);
+router.put("/:id", OrderController.updateOrderStatus);
+router.delete("/:id", OrderController.deleteOrder);
+router.get("/user/:userId", OrderController.getOrdersByUserId);
 export default router;

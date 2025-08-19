@@ -1,32 +1,31 @@
-import { FormRules } from "../fsm/base-fsm"; // Đảm bảo ConditionFn là `unknown | Promise<unknown>`
-import { UserModel } from "../models/users.model";
-import type IUser from "../types/user";
-import bcrypt from "bcrypt";
-
-type ILoginForm = Pick<IUser, "email" | "password">;
+import { FormRules } from "../fsm/base-fsm";
+import { ILoginForm } from "../types/validation";
+import { VALIDATION_CONDITIONS } from "../utils/validation";
+import { VALIDATION_MESSAGES } from "../types/validation";
 
 export const LoginForm: FormRules<ILoginForm> = {
   email: [
     {
-      condition: (data) => !data.email,
-      error: "Vui lòng điền email",
+      condition: VALIDATION_CONDITIONS.emailRequired,
+      error: VALIDATION_MESSAGES.REQUIRED.EMAIL,
     },
     {
-      condition: async (data) => {
-        const user = await UserModel.findOne({ email: data.email });
-        return user;
-      },
-      error: "Email không tồn tại trên hệ thống",
+      condition: VALIDATION_CONDITIONS.emailValid,
+      error: VALIDATION_MESSAGES.EMAIL.INVALID,
+    },
+    {
+      condition: VALIDATION_CONDITIONS.emailExists,
+      error: VALIDATION_MESSAGES.EMAIL.NOT_EXISTS,
     },
   ],
   password: [
     {
-      condition: (data) => !data.password,
-      error: "Vui lòng nhập mật khẩu",
+      condition: VALIDATION_CONDITIONS.passwordRequired,
+      error: VALIDATION_MESSAGES.REQUIRED.PASSWORD,
     },
     {
-      condition: (data) => !(data.password.length >= 8),
-      error: "Mật khẩu phải có ít nhất 8 ký tự",
+      condition: VALIDATION_CONDITIONS.passwordMinLength,
+      error: VALIDATION_MESSAGES.PASSWORD.MIN_LENGTH,
     },
   ],
 };

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import Donation from "../models/donate.model";
 import { validateFlow } from "../fsm/base-fsm";
 import { DonationForm } from "../validate/donation.form";
-import { createPayOs, IData, IPayOs } from "../utils/featch.bank";
+import { createPayOs, IData, IPayOs } from "../utils/payment";
 
 class DonationController {
   public static async createDonation(req: Request, res: Response) {
@@ -78,18 +78,18 @@ class DonationController {
       );
 
       const totalTreeCount = donations.reduce(
-        (acc, donation) => acc + (donation.treeCount || 0),
+        (acc, donation) => acc + (donation.quantity || 0),
         0,
       );
 
       const contributorMap: Record<string, number> = {};
 
       donations.forEach((d) => {
-        const key = d.email || d.userId || "unknown";
+        const key = d.email || d.userId?.toString() || "unknown";
         if (!contributorMap[key]) {
           contributorMap[key] = 0;
         }
-        contributorMap[key] += d.treeCount || 0;
+        contributorMap[key] += d.quantity || 0;
       });
 
       const treeCountByUser = Object.entries(contributorMap).map(

@@ -1,4 +1,5 @@
-import { IData } from "./featch.bank";
+
+import type { IData } from "../payment/payos";
 
 export const verifyEmailContent = (link: string) => {
   return `

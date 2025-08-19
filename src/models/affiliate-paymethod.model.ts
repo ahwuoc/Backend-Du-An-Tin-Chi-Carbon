@@ -1,37 +1,24 @@
-import mongoose, { Schema, Document, Model, Types } from "mongoose";
-// Import Affiliate interface/type
-import { type IAffiliate } from "./affiliate.model";
-// Define Interface for Affiliate Payment Method Document
-export interface IAffiliatePaymentMethod extends Document {
-  // Reference to the Affiliate this payment method belongs to
-  affiliateId: Types.ObjectId | IAffiliate;
-  type: "bank_transfer" | "paypal" | "other"; // Payout methods
-  name?: string; // Friendly name
-  details: any;
-  isDefault: boolean; // Is this the default payout method for the affiliate
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema, Document, Model } from "mongoose";
+import { IAffiliatePaymentMethod } from "../types/affiliate-paymethod";
 
-// Define Affiliate Payment Method Schema
-const AffiliatePaymentMethodSchema: Schema<IAffiliatePaymentMethod> =
+export interface IAffiliatePaymentMethodDocument extends IAffiliatePaymentMethod, Document {}
+
+const AffiliatePaymentMethodSchema: Schema<IAffiliatePaymentMethodDocument> =
   new Schema(
     {
-      // Reference to the Affiliate model
       affiliateId: {
         type: Schema.Types.ObjectId,
         ref: "Affiliate",
         required: true,
       },
 
-      // Type of payout method
       type: {
         type: String,
         enum: ["bank_transfer", "paypal", "other"],
         required: true,
       },
 
-      // Optional friendly name
+     // Optional friendly name
       name: { type: String, trim: true },
       details: { type: Object, required: true },
 
@@ -41,14 +28,12 @@ const AffiliatePaymentMethodSchema: Schema<IAffiliatePaymentMethod> =
     { timestamps: true }
   ); // Auto add createdAt and updatedAt
 
-// Add indexes for efficient querying
 AffiliatePaymentMethodSchema.index({ affiliateId: 1 });
 AffiliatePaymentMethodSchema.index({ affiliateId: 1, isDefault: -1 });
 
-// Create and export AffiliatePaymentMethod Model
-const AffiliatePaymentMethod: Model<IAffiliatePaymentMethod> =
+const AffiliatePaymentMethod: Model<IAffiliatePaymentMethodDocument> =
   mongoose.models.AffiliatePaymentMethod ||
-  mongoose.model<IAffiliatePaymentMethod>(
+  mongoose.model<IAffiliatePaymentMethodDocument>(
     "AffiliatePaymentMethod",
     AffiliatePaymentMethodSchema
   );
