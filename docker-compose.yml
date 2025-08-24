@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    container_name: tinchi-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://localhost:27017/tinchi_carbon
+      - JWT_SECRET=your_jwt_secret
+      - JWT_EXPIRES_IN=1h
+      - JWT_REFRESH_SECRET=your_refresh_jwt_secret
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - JWT_COOKIE_EXPIRES_IN=15m
+      - JWT_COOKIE_SECURE=false
+    volumes:
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "bun eval \"import http from 'node:http'; http.get('http://localhost:3000/', res => process.exit(res.statusCode === 200 ? 0 : 1))\""]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    
