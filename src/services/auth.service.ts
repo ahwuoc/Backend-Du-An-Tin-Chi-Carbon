@@ -8,14 +8,11 @@ import { ProjectCarbon } from "../models/project-carbon.model";
 import { RegisterForm, LoginForm } from "../validate";
 import { validateFlow } from "../fsm/base-fsm";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
-if (!JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET environment variable is missing.");
-  process.exit(1);
-}
+import { config } from "../config/env";
 
+const JWT_SECRET = config.JWT_SECRET;
+const JWT_EXPIRES_IN = config.JWT_EXPIRES_IN;
 export interface IUser {
   id: string;
   email: string;
