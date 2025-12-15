@@ -1,9 +1,8 @@
 import type { Request, Response } from "express";
 import { ProjectCarbon } from "../models/project-carbon.model";
 import { Types } from "mongoose";
-import { param } from "express-validator";
-import { Project } from "../models/project.model";
-import { ProjectMember } from "../models/project-member.router";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError } from "../utils";
 
 interface ProjectCarbonInputData {
   name: string;
@@ -20,7 +19,6 @@ interface ProjectCarbonInputData {
     averageHeight?: string;
     averageCircumference?: string;
     previousDeforestation?: "no" | "yes" | "unknown" | "";
-
     riceLocation?: string;
     riceArea?: string;
     riceTerrain?: string;
@@ -28,7 +26,6 @@ interface ProjectCarbonInputData {
     riceSoilType?: string;
     riceStartDate?: string | Date | null;
     riceEndDate?: string | Date | null;
-
     biocharRawMaterial?: string;
     biocharCarbonContent?: string;
     biocharLandArea?: string;
@@ -40,166 +37,97 @@ interface ProjectCarbonInputData {
   userId: Types.ObjectId | string;
 }
 
-export default class ProjectCarbonController {
-  static async createProjectCarbon(req: Request, res: Response): Promise<void> {
-    try {
-      console.log("Full request body:", req.body);
+class ProjectCarbonController {
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { landDocuments, kmlFile, ...restBody } = req.body;
+
       const newProjectData: ProjectCarbonInputData = {
         ...restBody,
         landDocuments: Array.isArray(landDocuments) ? landDocuments : [],
         kmlFile: kmlFile || null,
-        details: {
-          ...(restBody.details || {}),
-        },
+        details: { ...(restBody.details || {}) },
       };
 
+      // Convert date strings to Date objects
       if (typeof newProjectData.details?.riceStartDate === "string") {
-        newProjectData.details.riceStartDate = new Date(
-          newProjectData.details.riceStartDate,
-        );
+        newProjectData.details.riceStartDate = new Date(newProjectData.details.riceStartDate);
       }
       if (typeof newProjectData.details?.riceEndDate === "string") {
-        newProjectData.details.riceEndDate = new Date(
-          newProjectData.details.riceEndDate,
-        );
+        newProjectData.details.riceEndDate = new Date(newProjectData.details.riceEndDate);
       }
 
       const project = await ProjectCarbon.create(newProjectData);
-      res.status(201).json(project);
-    } catch (error: any) {
-      console.error("Error creating project:", error);
-      if (error.name === "ValidationError") {
-        res.status(400).json({ message: error.message, errors: error.errors });
-      } else {
-        res
-          .status(500)
-          .json({ message: "Error creating project", error: error.message });
-      }
+      sendSuccess(res, "Tạo project carbon thành công", project, 201);
     }
-  }
+  );
 
-  static async getProjectByUser(req: Request, res: Response) {
-    const userId = req.params.id;
-    if (!userId) {
-      res.status(400).json({ error: "Thiếu userId" });
-      return;
-    }
-    try {
-      const project = await ProjectCarbon.find({ userId });
-      res.json(project);
-      return;
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Lỗi khi lấy project" });
-      return;
-    }
-  }
-  static async getAllProjectCarbons(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const projects = await ProjectCarbon.find({});
-      res.status(200).json(projects);
-    } catch (error: any) {
-      console.error("Error fetching projects:", error);
-      res
-        .status(500)
-        .json({ message: "Error fetching projects", error: error.message });
-    }
-  }
+  public getByUserId = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("User ID là bắt buộc");
 
-  static async getProjectCarbonById(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const project = await ProjectCarbon.findById(req.params.id);
-      if (!project) {
-        res.status(404).json({ message: "Project not found" }); // Removed return
-      } else {
-        res.status(200).json(project); // Removed return
-      }
-    } catch (error: any) {
-      console.error("Error fetching project by ID:", error);
-      if (error.name === "CastError") {
-        res.status(400).json({ message: "Invalid Project ID" }); // Removed return
-      } else {
-        res
-          .status(500)
-          .json({ message: "Error fetching project", error: error.message }); // Removed return
-      }
+      const projects = await ProjectCarbon.find({ userId: id }).lean();
+      sendSuccess(res, "Lấy project theo user thành công", projects, 200);
     }
-  }
+  );
 
-  static async updateProjectCarbon(req: Request, res: Response): Promise<void> {
-    try {
-      // Cast req.body to the input type for better type hinting
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const projects = await ProjectCarbon.find({}).lean();
+      sendSuccess(res, "Lấy danh sách project carbon thành công", projects, 200);
+    }
+  );
+
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
+
+      const project = await ProjectCarbon.findById(id).lean();
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Lấy project carbon thành công", project, 200);
+    }
+  );
+
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
+
       const updateData = req.body as ProjectCarbonInputData;
-      const projectId = req.params.id;
-      if (
-        updateData.details?.riceStartDate &&
-        typeof updateData.details.riceStartDate === "string"
-      ) {
-        updateData.details.riceStartDate = new Date(
-          updateData.details.riceStartDate,
-        );
+
+      // Convert date strings to Date objects
+      if (updateData.details?.riceStartDate && typeof updateData.details.riceStartDate === "string") {
+        updateData.details.riceStartDate = new Date(updateData.details.riceStartDate);
       }
-      if (
-        updateData.details?.riceEndDate &&
-        typeof updateData.details.riceEndDate === "string"
-      ) {
-        updateData.details.riceEndDate = new Date(
-          updateData.details.riceEndDate,
-        );
+      if (updateData.details?.riceEndDate && typeof updateData.details.riceEndDate === "string") {
+        updateData.details.riceEndDate = new Date(updateData.details.riceEndDate);
       }
 
-      const project = await ProjectCarbon.findByIdAndUpdate(
-        projectId,
-        updateData, // Mongoose can often handle nested updates if the structure matches the schema
-        { new: true, runValidators: true }, // { new: true } returns the updated doc, { runValidators: true } validates updates
-      );
+      const project = await ProjectCarbon.findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      });
 
-      if (!project) {
-        res.status(404).json({ message: "Project not found" }); // Removed return
-      } else {
-        res.status(200).json(project); // Removed return
-      }
-    } catch (error: any) {
-      console.error("Error updating project:", error);
-      if (error.name === "CastError") {
-        res.status(400).json({ message: "Invalid Project ID" }); // Removed return
-      } else if (error.name === "ValidationError") {
-        res.status(400).json({ message: error.message }); // Removed return
-      } else {
-        res
-          .status(500)
-          .json({ message: "Error updating project", error: error.message }); // Removed return
-      }
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Cập nhật project carbon thành công", project, 200);
     }
-  }
+  );
 
-  static async deleteProjectCarbon(req: Request, res: Response): Promise<void> {
-    try {
-      const project = await ProjectCarbon.findByIdAndDelete(req.params.id);
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
 
-      if (!project) {
-        res.status(404).json({ message: "Project not found" }); // Removed return
-      } else {
-        res
-          .status(200)
-          .json({ message: "Project deleted successfully", project }); // Removed return
-      }
-    } catch (error: any) {
-      console.error("Error deleting project:", error);
-      if (error.name === "CastError") {
-        res.status(400).json({ message: "Invalid Project ID" }); // Removed return
-      } else {
-        res
-          .status(500)
-          .json({ message: "Error deleting project", error: error.message }); // Removed return
-      }
+      const project = await ProjectCarbon.findByIdAndDelete(id);
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Xóa project carbon thành công", project, 200);
     }
-  }
+  );
 }
+
+export default new ProjectCarbonController();

@@ -1,81 +1,108 @@
 import type { Request, Response } from "express";
 import AffiliateTransaction from "../models/affiliate-transaction.model";
 import type { IAffiliateTransaction } from "../types/affiliate-transaction";
-export class AffiliateTransactionController {
-  static async getAll(req: Request, res: Response) {
-    try {
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError } from "../utils";
+
+/**
+ * Affiliate Transaction Controller
+ */
+class AffiliateTransactionController {
+  /**
+   * Lấy tất cả transactions
+   * GET /api/transactions
+   */
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
       const transactions = await AffiliateTransaction.find().lean();
-      res.status(200).json(transactions);
-    } catch (error) {
-      console.error("Error getting transactions:", error);
-      res.status(500).json({ message: "Internal server error" });
+      sendSuccess(res, "Lấy danh sách giao dịch thành công", transactions, 200);
     }
-  }
+  );
 
-  // GET by ID
-  static async getById(req: Request, res: Response) {
-    try {
-      const affiliateId = req.params.id;
-      const affiliate = await AffiliateTransaction.findOne({
-        affiliateId,
+  /**
+   * Lấy transaction theo affiliate ID
+   * GET /api/transactions/:id
+   */
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+
+      if (!id) {
+        throw new BadRequestError("Affiliate ID là bắt buộc");
+      }
+
+      const transaction = await AffiliateTransaction.findOne({
+        affiliateId: id,
       }).lean();
-      if (!affiliate) {
-        res.status(404).json({ message: "Affiliate not found" });
-        return;
-      }
-      res.status(200).json(affiliate);
-    } catch (error) {
-      console.error("Error getting transaction:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
 
-  // POST create
-  static async create(req: Request, res: Response) {
-    try {
+      if (!transaction) {
+        throw new NotFoundError("Không tìm thấy giao dịch");
+      }
+
+      sendSuccess(res, "Lấy giao dịch thành công", transaction, 200);
+    }
+  );
+
+  /**
+   * Tạo transaction mới
+   * POST /api/transactions
+   */
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const data = req.body as Partial<IAffiliateTransaction>;
-      const newTransaction = new AffiliateTransaction(data);
-      await newTransaction.save();
-      res.status(201).json(newTransaction);
-    } catch (error) {
-      console.error("Error creating transaction:", error);
-      res.status(400).json({ message: "Invalid data", error });
-    }
-  }
+      const newTransaction = await AffiliateTransaction.create(data);
 
-  // PUT update
-  static async update(req: Request, res: Response) {
-    try {
+      sendSuccess(res, "Tạo giao dịch thành công", newTransaction, 201);
+    }
+  );
+
+  /**
+   * Cập nhật transaction
+   * PUT /api/transactions/:id
+   */
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+
+      if (!id) {
+        throw new BadRequestError("Transaction ID là bắt buộc");
+      }
+
       const updated = await AffiliateTransaction.findByIdAndUpdate(
-        req.params.id,
+        id,
         req.body,
-        { new: true }
+        { new: true, runValidators: true }
       ).lean();
-      if (!updated) {
-        res.status(404).json({ message: "Transaction not found" });
-        return;
-      }
-      res.status(200).json(updated);
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      res.status(400).json({ message: "Invalid update data", error });
-    }
-  }
 
-  // DELETE
-  static async delete(req: Request, res: Response) {
-    try {
-      const deleted = await AffiliateTransaction.findByIdAndDelete(
-        req.params.id
-      ).lean();
-      if (!deleted) {
-        res.status(404).json({ message: "Transaction not found" });
-        return;
+      if (!updated) {
+        throw new NotFoundError("Không tìm thấy giao dịch");
       }
-      res.status(200).json({ message: "Deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
-      res.status(500).json({ message: "Internal server error" });
+
+      sendSuccess(res, "Cập nhật giao dịch thành công", updated, 200);
     }
-  }
+  );
+
+  /**
+   * Xóa transaction
+   * DELETE /api/transactions/:id
+   */
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+
+      if (!id) {
+        throw new BadRequestError("Transaction ID là bắt buộc");
+      }
+
+      const deleted = await AffiliateTransaction.findByIdAndDelete(id).lean();
+
+      if (!deleted) {
+        throw new NotFoundError("Không tìm thấy giao dịch");
+      }
+
+      sendSuccess(res, "Xóa giao dịch thành công", deleted, 200);
+    }
+  );
 }
+
+export default new AffiliateTransactionController();

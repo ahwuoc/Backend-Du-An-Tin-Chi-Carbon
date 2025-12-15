@@ -3,29 +3,33 @@ import Donation from "../models/donate.model";
 import { validateFlow } from "../fsm/base-fsm";
 import { DonationForm } from "../validate/donation.form";
 import { createPayOs, IData, IPayOs } from "../utils/payment";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError, ValidationError } from "../utils";
 
 class DonationController {
-  public static async createDonation(req: Request, res: Response) {
-    const { name, email, phone, quantity, note } = req.body;
-    const errors = await validateFlow(req.body, DonationForm);
-    if (errors.length > 0) {
-      res.status(400).json({
-        message: "Thiếu thông tin bắt buộc",
-        errors,
-      });
-      return;
-    }
-    try {
-      // ===========Handler PaysOS =========
-      // Payload gửi tới payos
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { name, email, phone, quantity, note } = req.body;
+
+      // Validate
+      const errors = await validateFlow(req.body, DonationForm);
+      if (errors.length > 0) {
+        throw new ValidationError("Thiếu thông tin bắt buộc", errors);
+      }
+
+      // Get base URL
       let baseUrl =
         req.headers.referer?.toString() ||
         req.headers.origin?.toString() ||
         process.env.FRONT_END_URL;
+
       if (!baseUrl) {
-        throw new Error("❌ Không xác định được baseUrl");
+        throw new BadRequestError("Không xác định được baseUrl");
       }
+
       baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+
+      // Create PayOS payment
       const random6Digits = Math.floor(100000 + Math.random() * 900000);
       const payosPayload: IPayOs = {
         orderCode: random6Digits,
@@ -34,15 +38,17 @@ class DonationController {
         cancelUrl: `${baseUrl}/gop-mam-xanh#plant-tree-section`,
         returnUrl: `${baseUrl}/gop-mam-xanh#plant-tree-section`,
       };
+
       const dataPayload: IData = {
         buyerName: name,
         buyerEmail: email,
         buyerPhone: phone,
       };
-      // ===========Mock BaseUrl======
+
       const response = await createPayOs(payosPayload, dataPayload);
-      if (response.code == "00") {
-        const donation = new Donation({
+
+      if (response.code === "00") {
+        const donation = await Donation.create({
           name,
           email,
           phone,
@@ -54,141 +60,96 @@ class DonationController {
           checkoutUrl: response.data.checkoutUrl,
           success: "success",
         });
-        await donation.save();
-        res.status(201).json({
-          message: "Đóng góp thành công, cảm ơn bạn đã góp xanh! 🌳",
-          checkoutUrl: response.data.checkoutUrl,
-        });
+
+        sendSuccess(
+          res,
+          "Đóng góp thành công, cảm ơn bạn đã góp xanh! 🌳",
+          { donation, checkoutUrl: response.data.checkoutUrl },
+          201
+        );
       }
-    } catch (error) {
-      console.log("Lỗi", error);
-      res
-        .status(500)
-        .json({ error: "Oops! Server hỏng mất, thử lại sau nhé!" });
-      return;
     }
-  }
-  public static async getInfoDonations(req: Request, res: Response) {
-    try {
-      const donations = await Donation.find().sort({ createdAt: -1 }).limit(50);
+  );
 
-      const totalQuantity = donations.reduce(
-        (acc, donation) => acc + donation.quantity,
-        0,
-      );
+  public getInfo = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const donations = await Donation.find().sort({ createdAt: -1 }).limit(50).lean();
 
-      const totalTreeCount = donations.reduce(
-        (acc, donation) => acc + (donation.quantity || 0),
-        0,
-      );
+      const totalQuantity = donations.reduce((acc, d) => acc + d.quantity, 0);
+      const totalTreeCount = donations.reduce((acc, d) => acc + (d.quantity || 0), 0);
 
       const contributorMap: Record<string, number> = {};
-
       donations.forEach((d) => {
         const key = d.email || d.userId?.toString() || "unknown";
-        if (!contributorMap[key]) {
-          contributorMap[key] = 0;
-        }
-        contributorMap[key] += d.quantity || 0;
+        contributorMap[key] = (contributorMap[key] || 0) + (d.quantity || 0);
       });
 
-      const treeCountByUser = Object.entries(contributorMap).map(
-        ([email, treeCount]) => ({
-          email,
-          treeCount,
-        }),
-      );
-      res.status(200).json({
+      const treeCountByUser = Object.entries(contributorMap).map(([email, treeCount]) => ({
+        email,
+        treeCount,
+      }));
+
+      sendSuccess(res, "Lấy thông tin đóng góp thành công", {
         donations,
         totalQuantity,
         totalTreeCount,
         contributorCount: Object.keys(contributorMap).length,
         treeCountByUser,
-      });
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách đóng góp:", error);
-      res
-        .status(500)
-        .json({ error: "Lỗi server, danh sách đóng góp mất tiêu rồi!" });
+      }, 200);
     }
-  }
+  );
 
-  public static async getDonations(req: Request, res: Response) {
-    try {
-      const donations = await Donation.find().sort({ createdAt: -1 }).limit(50);
-      res.status(200).json({ donations });
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách đóng góp:", error);
-      res
-        .status(500)
-        .json({ error: "Lỗi server, danh sách đóng góp mất tiêu rồi!" });
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const donations = await Donation.find().sort({ createdAt: -1 }).limit(50).lean();
+      sendSuccess(res, "Lấy danh sách đóng góp thành công", donations, 200);
     }
-  }
+  );
 
-  public static async deleteDonations(req: Request, res: Response) {
-    const _id = req.params.id;
-    try {
-      const deleted = await Donation.findByIdAndDelete(_id);
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Donation ID là bắt buộc");
 
-      if (!deleted) {
-        res.status(404).json({ error: "Không tìm thấy donation cần xóa." });
-        return;
-      }
-      res.status(200).json({ message: "Xóa donation thành công!", deleted });
-    } catch (error) {
-      console.error("Lỗi khi xóa donation:", error);
-      res.status(500).json({ error: "Lỗi server, xóa không được rồi!" });
+      const deleted = await Donation.findByIdAndDelete(id);
+      if (!deleted) throw new NotFoundError("Không tìm thấy donation cần xóa");
+
+      sendSuccess(res, "Xóa donation thành công", deleted, 200);
     }
-  }
-  public static async getDonationAndUpdateStatus(req: Request, res: Response) {
-    const orderCode = req.params.id;
-    try {
-      const donationTree = await Donation.findOneAndUpdate(
-        { orderCode },
-        { $set: { status: "success" } }, // 👈 update giá trị status
-        { new: true },
+  );
+
+  public updateStatus = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Order code là bắt buộc");
+
+      const donation = await Donation.findOneAndUpdate(
+        { orderCode: id },
+        { $set: { status: "success" } },
+        { new: true }
       );
 
-      if (!donationTree) {
-        res.status(404).json({
-          message: "Không tìm thấy đơn đóng góp với mã đơn này.",
-        });
-        return;
-      }
-      res.status(200).json({
-        message: "Cập nhật trạng thái thành công.",
-        donation: donationTree,
-      });
-      return;
-    } catch (err) {
-      console.error("Lỗi khi cập nhật đơn donation:", err);
-      res.status(500).json({
-        message: "Lỗi server khi xử lý đơn donation.",
-      });
-      return;
+      if (!donation) throw new NotFoundError("Không tìm thấy đơn đóng góp với mã đơn này");
+
+      sendSuccess(res, "Cập nhật trạng thái thành công", donation, 200);
     }
-  }
-  public static async updateDonations(req: Request, res: Response) {
-    const _id = req.params.id;
-    const updateData = req.body;
-    try {
-      const updated = await Donation.findByIdAndUpdate(_id, updateData, {
+  );
+
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Donation ID là bắt buộc");
+
+      const updated = await Donation.findByIdAndUpdate(id, req.body, {
         new: true,
         runValidators: true,
       });
 
-      if (!updated) {
-        res.status(404).json({ error: "Không tìm thấy donation để cập nhật." });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Cập nhật donation thành công!", updated });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật donation:", error);
-      res.status(500).json({ error: "Lỗi server, cập nhật thất bại!" });
+      if (!updated) throw new NotFoundError("Không tìm thấy donation để cập nhật");
+
+      sendSuccess(res, "Cập nhật donation thành công", updated, 200);
     }
-  }
+  );
 }
 
-export default DonationController;
+export default new DonationController();

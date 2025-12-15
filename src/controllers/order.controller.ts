@@ -1,148 +1,100 @@
 import type { Request, Response } from "express";
 import { OrderService } from "../services";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError, ValidationError } from "../utils";
 
 class OrderController {
-  async create(req: Request, res: Response) {
-    try {
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const orderData = req.body;
       const validationErrors = OrderService.validateOrderData(orderData);
 
       if (validationErrors.length > 0) {
-        res.status(400).json({
-          error: `Thiếu thông tin bắt buộc: ${validationErrors.join(", ")}`,
-        });
-        return;
+        throw new ValidationError(
+          `Thiếu thông tin bắt buộc: ${validationErrors.join(", ")}`,
+          validationErrors
+        );
       }
 
-      // Xác định baseUrl
       let baseUrl =
         req.headers.referer?.toString() ||
         req.headers.origin?.toString() ||
         process.env.FRONT_END_URL;
+
       if (!baseUrl) {
-        throw new Error("❌ Không xác định được baseUrl");
+        throw new BadRequestError("Không xác định được baseUrl");
       }
+
       baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-
       const result = await OrderService.createOrder(orderData, baseUrl);
-      
-      if (result.paymentLink) {
-        res.status(201).json({
+
+      sendSuccess(
+        res,
+        "Tạo đơn hàng thành công",
+        {
           order: result.order,
-          paymentLink: result.paymentLink,
-        });
-      } else {
-        res.status(201).json(result.order);
-      }
-    } catch (error: any) {
-      console.error("Lỗi tạo đơn hàng:", error);
-      res.status(500).json({
-        error: error.message || "Lỗi server khi tạo đơn hàng",
-      });
+          paymentLink: result.paymentLink || null,
+        },
+        201
+      );
     }
-  }
+  );
 
-  async getAllOrders(req: Request, res: Response) {
-    try {
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
       const orders = await OrderService.getAllOrders();
-      res.status(200).json(orders);
-    } catch (error) {
-      console.error("Lỗi lấy danh sách đơn hàng:", error);
-      res.status(500).json({
-        error: "Lỗi server khi lấy danh sách đơn hàng",
-      });
+      sendSuccess(res, "Lấy danh sách đơn hàng thành công", orders, 200);
     }
-  }
+  );
 
-  async getOrderById(req: Request, res: Response) {
-    try {
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Order ID là bắt buộc");
+
       const order = await OrderService.getOrderById(id);
-      
-      if (!order) {
-        res.status(404).json({
-          error: "Không tìm thấy đơn hàng",
-        });
-        return;
-      }
+      if (!order) throw new NotFoundError("Không tìm thấy đơn hàng");
 
-      res.status(200).json(order);
-    } catch (error) {
-      console.error("Lỗi lấy chi tiết đơn hàng:", error);
-      res.status(500).json({
-        error: "Lỗi server khi lấy chi tiết đơn hàng",
-      });
+      sendSuccess(res, "Lấy chi tiết đơn hàng thành công", order, 200);
     }
-  }
+  );
 
-  async getOrdersByUserId(req: Request, res: Response) {
-    try {
+  public getByUserId = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { userId } = req.params;
-      const orders = await OrderService.getOrdersByUserId(userId);
-      res.status(200).json(orders);
-    } catch (error) {
-      console.error("Lỗi lấy đơn hàng theo user:", error);
-      res.status(500).json({
-        error: "Lỗi server khi lấy đơn hàng theo user",
-      });
-    }
-  }
+      if (!userId) throw new BadRequestError("User ID là bắt buộc");
 
-  async updateOrderStatus(req: Request, res: Response) {
-    try {
+      const orders = await OrderService.getOrdersByUserId(userId);
+      sendSuccess(res, "Lấy đơn hàng theo user thành công", orders, 200);
+    }
+  );
+
+  public updateStatus = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
       const { status } = req.body;
 
-      if (!status) {
-        res.status(400).json({
-          error: "Trạng thái đơn hàng là bắt buộc",
-        });
-        return;
-      }
+      if (!id) throw new BadRequestError("Order ID là bắt buộc");
+      if (!status) throw new BadRequestError("Trạng thái đơn hàng là bắt buộc");
 
       const updatedOrder = await OrderService.updateOrderStatus(id, status);
-      
-      if (!updatedOrder) {
-        res.status(404).json({
-          error: "Không tìm thấy đơn hàng",
-        });
-        return;
-      }
+      if (!updatedOrder) throw new NotFoundError("Không tìm thấy đơn hàng");
 
-      res.status(200).json({
-        message: "Cập nhật trạng thái đơn hàng thành công",
-        order: updatedOrder,
-      });
-    } catch (error) {
-      console.error("Lỗi cập nhật trạng thái đơn hàng:", error);
-      res.status(500).json({
-        error: "Lỗi server khi cập nhật trạng thái đơn hàng",
-      });
+      sendSuccess(res, "Cập nhật trạng thái đơn hàng thành công", updatedOrder, 200);
     }
-  }
+  );
 
-  async deleteOrder(req: Request, res: Response) {
-    try {
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      const isDeleted = await OrderService.deleteOrder(id);
-      
-      if (!isDeleted) {
-        res.status(404).json({
-          error: "Không tìm thấy đơn hàng",
-        });
-        return;
-      }
+      if (!id) throw new BadRequestError("Order ID là bắt buộc");
 
-      res.status(200).json({
-        message: "Xóa đơn hàng thành công",
-      });
-    } catch (error) {
-      console.error("Lỗi xóa đơn hàng:", error);
-      res.status(500).json({
-        error: "Lỗi server khi xóa đơn hàng",
-      });
+      const isDeleted = await OrderService.deleteOrder(id);
+      if (!isDeleted) throw new NotFoundError("Không tìm thấy đơn hàng");
+
+      sendSuccess(res, "Xóa đơn hàng thành công", null, 200);
     }
-  }
+  );
 }
 
 export default new OrderController();

@@ -1,72 +1,62 @@
 import type { Request, Response } from "express";
 import CarbonCredit from "../models/carboncredit.model";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError } from "../utils";
 
-export class CarbonCreditController {
-  // GET all
-  static async getAll(req: Request, res: Response) {
-    try {
-      const data = await CarbonCredit.find();
-      res.status(200).json(data);
-    } catch (err) {
-      res.status(500).json({ error: "Lỗi server khi lấy dữ liệu" });
+class CarbonCreditController {
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const data = await CarbonCredit.find().lean();
+      sendSuccess(res, "Lấy danh sách carbon credit thành công", data, 200);
     }
-  }
+  );
 
-  // GET by ID
-  static async getById(req: Request, res: Response) {
-    try {
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      const data = await CarbonCredit.findById(id);
-      if (!data) {
-        res.status(404).json({ error: "Không tìm thấy tài nguyên" });
-        return;
-      }
-      res.status(200).json(data);
-    } catch (err) {
-      res.status(500).json({ error: "Lỗi server khi lấy dữ liệu" });
-    }
-  }
+      if (!id) throw new BadRequestError("Carbon Credit ID là bắt buộc");
 
-  // CREATE
-  static async create(req: Request, res: Response) {
-    try {
-      const newItem = new CarbonCredit(req.body);
-      const saved = await newItem.save();
-      res.status(201).json(saved);
-    } catch (err) {
-      res.status(400).json({ error: "Dữ liệu không hợp lệ hoặc thiếu" });
-    }
-  }
+      const data = await CarbonCredit.findById(id).lean();
+      if (!data) throw new NotFoundError("Không tìm thấy carbon credit");
 
-  static async update(req: Request, res: Response) {
-    try {
+      sendSuccess(res, "Lấy carbon credit thành công", data, 200);
+    }
+  );
+
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const newItem = await CarbonCredit.create(req.body);
+      sendSuccess(res, "Tạo carbon credit thành công", newItem, 201);
+    }
+  );
+
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Carbon Credit ID là bắt buộc");
+
       const updated = await CarbonCredit.findByIdAndUpdate(id, req.body, {
         new: true,
-      });
-      if (!updated) {
-        res.status(404).json({ error: "Không tìm thấy tài nguyên" });
-        return;
-      }
+        runValidators: true,
+      }).lean();
 
-      res.status(200).json(updated);
-    } catch (err) {
-      res.status(400).json({ error: "Dữ liệu không hợp lệ hoặc thiếu" });
+      if (!updated) throw new NotFoundError("Không tìm thấy carbon credit");
+
+      sendSuccess(res, "Cập nhật carbon credit thành công", updated, 200);
     }
-  }
+  );
 
-  // DELETE by ID
-  static async delete(req: Request, res: Response) {
-    try {
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      const deleted = await CarbonCredit.findByIdAndDelete(id);
-      if (!deleted) {
-        res.status(404).json({ error: "Không tìm thấy tài nguyên" });
-        return;
-      }
-      res.status(200).json({ message: "Xóa thành công" });
-    } catch (err) {
-      res.status(500).json({ error: "Lỗi server khi xóa dữ liệu" });
+      if (!id) throw new BadRequestError("Carbon Credit ID là bắt buộc");
+
+      const deleted = await CarbonCredit.findByIdAndDelete(id).lean();
+      if (!deleted) throw new NotFoundError("Không tìm thấy carbon credit");
+
+      sendSuccess(res, "Xóa carbon credit thành công", null, 200);
     }
-  }
+  );
 }
+
+export default new CarbonCreditController();

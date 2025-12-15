@@ -1,214 +1,139 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Project } from "../models/project.model";
-import { ProjectMember } from "../models/project-member.router";
 import { ProjectCarbon } from "../models/project-carbon.model";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError, ValidationError } from "../utils";
+
 class ProjectController {
-  async createProject(req: Request, res: Response) {
-    try {
-      const {
-        name,
-        description,
-        status,
-        registrationDate,
-        startDate,
-        endDate,
-        carbonCredits,
-        carbonCreditsTotal,
-        carbonCreditsClaimed,
-        type,
-        location,
-        coordinates,
-        area,
-        participants,
-        progress,
-        documents,
-        activities,
-        userId,
-      } = req.body;
-      const newProject = new Project({
-        name,
-        description,
-        status,
-        registrationDate,
-        startDate,
-        endDate,
-        carbonCredits,
-        carbonCreditsTotal,
-        carbonCreditsClaimed,
-        type,
-        location,
-        coordinates,
-        area,
-        participants,
-        progress,
-        documents,
-        activities,
-        userId,
-      });
-      await newProject.save();
-      res
-        .status(201)
-        .json({ message: "Project created successfully", project: newProject });
-    } catch (error) {
-      res.status(500).json({ message: "Error creating project", error: error });
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const newProject = await Project.create(req.body);
+      sendSuccess(res, "Tạo project thành công", newProject, 201);
     }
-  }
-  async updateProject(req: Request, res: Response) {
-    try {
+  );
+
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      const updateData = req.body;
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
 
-      const updatedProject = await ProjectCarbon.findByIdAndUpdate(
-        id,
-        updateData,
-        {
-          new: true,
-        },
-      );
-
-      if (!updatedProject) {
-        res.status(404).json({ message: "Project not found" });
-        return;
-      }
-      res.status(200).json({
-        message: "Project updated successfully",
-        project: updatedProject,
+      const updatedProject = await ProjectCarbon.findByIdAndUpdate(id, req.body, {
+        new: true,
+        runValidators: true,
       });
-    } catch (error) {
-      res.status(500).json({ message: "Error updating project", error });
-    }
-  }
 
-  public async updateDocumentsStatus(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
-    try {
+      if (!updatedProject) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Cập nhật project thành công", updatedProject, 200);
+    }
+  );
+
+  public updateDocumentsStatus = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { projectId, documentId } = req.params;
       const { status } = req.query;
+
       if (typeof status !== "string") {
-        res.status(400).json({ error: "`status` phải là kiểu chuỗi (string)" });
-        return;
+        throw new BadRequestError("`status` phải là kiểu chuỗi (string)");
       }
 
-      // Optional: validate giá trị status nếu cần
       const validStatuses = ["rejected", "approved", "pending"];
       if (!validStatuses.includes(status)) {
-        res.status(400).json({
-          error: `Giá trị 'status' không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`,
-        });
-        return;
+        throw new ValidationError(
+          `Giá trị 'status' không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`
+        );
       }
+
       const updatedProject = await Project.findOneAndUpdate(
         { _id: projectId, "documents._id": documentId },
         { $set: { "documents.$.status": status } },
-        { new: true },
+        { new: true }
       );
 
       if (!updatedProject) {
-        res
-          .status(404)
-          .json({ error: "Không tìm thấy project hoặc document." });
-        return;
+        throw new NotFoundError("Không tìm thấy project hoặc document");
       }
-      res.status(200).json(updatedProject);
-      return;
-    } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái tài liệu:", error);
-      res
-        .status(500)
-        .json({ message: "Đã xảy ra lỗi khi cập nhật trạng thái", error });
-      return;
-    }
-  }
 
-  public async updateDocuments(req: Request, res: Response): Promise<void> {
-    try {
+      sendSuccess(res, "Cập nhật trạng thái tài liệu thành công", updatedProject, 200);
+    }
+  );
+
+  public updateDocuments = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
       const { documents } = req.body;
 
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
       if (!Array.isArray(documents)) {
-        res.status(400).json({ error: "documents phải là một mảng" });
-        return;
+        throw new ValidationError("documents phải là một mảng");
       }
-      const product = await Project.findByIdAndUpdate(
+
+      const project = await Project.findByIdAndUpdate(
         id,
         { documents },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       );
-      if (!product) {
-        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
-        return;
-      }
-      res.status(200).json(product);
-    } catch (error) {
-      res.status(500).json({ message: "Có lỗi xảy ra!", error });
+
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Cập nhật documents thành công", project, 200);
     }
-  }
-  public async updateActivities(req: Request, res: Response): Promise<void> {
-    try {
+  );
+
+  public updateActivities = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
       const { activities } = req.body;
 
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
       if (!Array.isArray(activities)) {
-        res.status(400).json({ error: "activity phải là một mảng" });
-        return;
+        throw new ValidationError("activities phải là một mảng");
       }
-      const product = await Project.findByIdAndUpdate(
+
+      const project = await Project.findByIdAndUpdate(
         id,
         { activities },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true }
       );
-      if (!product) {
-        res.status(404).json({ error: "Không tìm thấy sản phẩm" });
-        return;
-      }
-      res.status(200).json(product);
-    } catch (error) {
-      res.status(500).json({ message: "Có lỗi xảy ra!", error });
-    }
-  }
-  async getAllProjects(req: Request, res: Response) {
-    try {
-      const projects = await ProjectCarbon.find().populate("userId").lean();
-      res.status(200).json(projects);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error fetching projects", error: error });
-    }
-  }
 
-  async getProjectById(req: Request, res: Response) {
-    try {
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Cập nhật activities thành công", project, 200);
+    }
+  );
+
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const projects = await ProjectCarbon.find().populate("userId").lean();
+      sendSuccess(res, "Lấy danh sách project thành công", projects, 200);
+    }
+  );
+
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      if (!id) {
-        res.status(400).json({ message: "Invalid project ID" });
-        return;
+
+      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new BadRequestError("Project ID không hợp lệ");
       }
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid project ID" });
-        return;
-      }
+
       const project = await ProjectCarbon.findById(id).populate("userId");
-      if (!project) {
-        res.status(404).json({ message: "Project not found" });
-        return;
-      }
-      res.status(200).json(project);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching project", error: error });
+      if (!project) throw new NotFoundError("Không tìm thấy project");
+
+      sendSuccess(res, "Lấy project thành công", project, 200);
     }
-  }
-  async getUserProfileProject(req: Request, res: Response) {
-    try {
-      const userId = req.params.id;
-      const projects = await ProjectCarbon.find({ userId });
-      res.json(projects);
-    } catch (err) {
-      res.status(500).json({ error: "Server error", details: err });
+  );
+
+  public getByUserId = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("User ID là bắt buộc");
+
+      const projects = await ProjectCarbon.find({ userId: id }).lean();
+      sendSuccess(res, "Lấy project theo user thành công", projects, 200);
     }
-  }
+  );
 }
+
 export default new ProjectController();

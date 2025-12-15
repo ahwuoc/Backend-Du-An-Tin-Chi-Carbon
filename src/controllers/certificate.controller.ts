@@ -1,68 +1,62 @@
 import type { Request, Response } from "express";
 import { Certificate } from "../models/certificate.model";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError } from "../utils";
 
-export class CertificateController {
-  static async getAll(req: Request, res: Response) {
-    try {
-      const certificates = await Certificate.find();
-      res.json(certificates);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Lỗi khi lấy danh sách chứng chỉ", error });
+class CertificateController {
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
+      const certificates = await Certificate.find().lean();
+      sendSuccess(res, "Lấy danh sách chứng chỉ thành công", certificates, 200);
     }
-  }
+  );
 
-  static async getById(req: Request, res: Response) {
-    const _id = req.params.id;
-    try {
-      const cert = await Certificate.findOne({ _id });
-      if (!cert) res.status(404).json({ message: "Không tìm thấy chứng chỉ" });
-      res.json(cert);
-      return;
-    } catch (error) {
-      res.status(500).json({ message: "Lỗi khi tìm chứng chỉ", error });
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Certificate ID là bắt buộc");
+
+      const cert = await Certificate.findById(id).lean();
+      if (!cert) throw new NotFoundError("Không tìm thấy chứng chỉ");
+
+      sendSuccess(res, "Lấy chứng chỉ thành công", cert, 200);
     }
-  }
+  );
 
-  static async create(req: Request, res: Response) {
-    try {
-      const cert = new Certificate(req.body);
-      await cert.save();
-      res.status(201).json(cert);
-    } catch (error) {
-      res.status(400).json({ message: "Tạo chứng chỉ thất bại", error });
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const cert = await Certificate.create(req.body);
+      sendSuccess(res, "Tạo chứng chỉ thành công", cert, 201);
     }
-  }
+  );
 
-  static async update(req: Request, res: Response) {
-    const _id = req.params.id;
-    try {
-      const updated = await Certificate.findOneAndUpdate({ _id }, req.body, {
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Certificate ID là bắt buộc");
+
+      const updated = await Certificate.findByIdAndUpdate(id, req.body, {
         new: true,
-      });
-      if (!updated) {
-        res
-          .status(404)
-          .json({ message: "Không tìm thấy chứng chỉ để cập nhật" });
-        return;
-      }
-      res.json(updated);
-    } catch (error) {
-      res.status(400).json({ message: "Cập nhật thất bại", error });
-    }
-  }
+        runValidators: true,
+      }).lean();
 
-  static async delete(req: Request, res: Response) {
-    const _id = req.params.id;
-    try {
-      const deleted = await Certificate.findOneAndDelete({ _id });
-      if (!deleted)
-        res.status(404).json({ message: "Không tìm thấy chứng chỉ để xoá" });
-      res.json({ message: "Xoá thành công", deleted });
-      return;
-    } catch (error) {
-      res.status(500).json({ message: "Xoá thất bại", error });
+      if (!updated) throw new NotFoundError("Không tìm thấy chứng chỉ để cập nhật");
+
+      sendSuccess(res, "Cập nhật chứng chỉ thành công", updated, 200);
     }
-  }
+  );
+
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("Certificate ID là bắt buộc");
+
+      const deleted = await Certificate.findByIdAndDelete(id).lean();
+      if (!deleted) throw new NotFoundError("Không tìm thấy chứng chỉ để xóa");
+
+      sendSuccess(res, "Xóa chứng chỉ thành công", deleted, 200);
+    }
+  );
 }
+
+export default new CertificateController();

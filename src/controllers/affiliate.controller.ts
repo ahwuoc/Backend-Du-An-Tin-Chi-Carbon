@@ -1,13 +1,24 @@
+import type { Request, Response } from "express";
 import { Types } from "mongoose";
 import Affiliate from "../models/affiliate.model";
-import type { Request, Response } from "express";
 import { UserModel } from "../models/users.model";
+import AffiliatePaymentMethod from "../models/affiliate-paymethod.model";
 import { sendEmail } from "../utils/email/sendEmail";
 import { templateAfifliate } from "../utils/email/emailTemplates";
-import AffiliatePaymentMethod from "../models/affiliate-paymethod.model";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError, ConflictError } from "../utils";
+import { config } from "../config/env";
+
+/**
+ * Affiliate Controller
+ */
 class AffiliateController {
-  async createAffiliate(req: Request, res: Response) {
-    try {
+  /**
+   * Tạo affiliate mới
+   * POST /api/affiliates
+   */
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const {
         userId,
         fullName,
@@ -20,30 +31,31 @@ class AffiliateController {
         socialMedia,
         experience,
       } = req.body;
-      console.log(req.body);
 
-      // Kiểm tra các trường bắt buộc
+      // Validate required fields
       if (!userId || !fullName || !email || !phone) {
-        res.status(400).json({
-          message: "Missing required fields: userId, fullName, email, phone",
-        });
+        throw new BadRequestError(
+          "Thiếu thông tin bắt buộc: userId, fullName, email, phone"
+        );
       }
+
+      // Check user exists
       const existingUser = await UserModel.findById(userId);
       if (!existingUser) {
-        res.status(400).json({ message: "User not found" });
+        throw new NotFoundError("Người dùng không tồn tại");
       }
+
+      // Check if already affiliate
       const existingAffiliate = await Affiliate.findOne({ userId });
       if (existingAffiliate) {
-        res.status(400).json({
-          message: "User is already registered as an affiliate",
-        });
+        throw new ConflictError("Người dùng đã đăng ký affiliate");
       }
-      const referralLink = `${
-        process.env.FRONT_END_URL || "http://localhost:3000/"
-      }/dang-ky?ref=${userId}`;
 
-      // Tạo bản ghi affiliate
-      const affiliate = new Affiliate({
+      // Create referral link
+      const referralLink = `${config.FRONTEND_URL}/dang-ky?ref=${userId}`;
+
+      // Create affiliate
+      const affiliate = await Affiliate.create({
         userId,
         fullName,
         email,
@@ -61,147 +73,131 @@ class AffiliateController {
         status: "pending",
       });
 
-      await affiliate.save();
+      // Send email
       const emailContent = templateAfifliate({
         name: fullName,
         email,
         referralLink,
       });
       await sendEmail(email, "Đăng ký affiliate thành công", emailContent);
-      res.status(201).json({
-        message: "Affiliate registration submitted. Waiting for approval.",
-        affiliate: {
+
+      sendSuccess(
+        res,
+        "Đăng ký affiliate thành công. Đang chờ phê duyệt.",
+        {
           _id: affiliate._id,
           userId: affiliate.userId,
           fullName: affiliate.fullName,
           email: affiliate.email,
           status: affiliate.status,
         },
-      });
-    } catch (error) {
-      console.error("Error creating affiliate:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+        201
+      );
     }
-  }
+  );
 
-  async getAllAffiliates(req: Request, res: Response) {
-    if (req.method !== "GET") {
-      res.status(405).json({ message: "Method Not Allowed" });
-      return;
-    }
-    try {
+  /**
+   * Lấy tất cả affiliates
+   * GET /api/affiliates
+   */
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
       const affiliates = await Affiliate.find()
         .populate("userId", "username email")
         .lean();
 
-      res.status(200).json({
-        message: "Affiliates retrieved successfully",
-        affiliates,
-      });
-    } catch (error) {
-      console.error("Error fetching affiliates:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      sendSuccess(res, "Lấy danh sách affiliate thành công", affiliates, 200);
     }
-  }
-  async getAffiliateByUserId(req: Request, res: Response) {
-    const userId = req.params.id;
-    try {
-      const affiliate = await Affiliate.findOne({ userId }).populate("userId");
+  );
+
+  /**
+   * Lấy affiliate theo user ID
+   * GET /api/affiliates/:id
+   */
+  public getByUserId = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+
+      if (!id) {
+        throw new BadRequestError("User ID là bắt buộc");
+      }
+
+      const affiliate = await Affiliate.findOne({ userId: id }).populate(
+        "userId"
+      );
+
       if (!affiliate) {
-        res.status(404).json({ message: "Affiliate not found" });
-        return;
+        throw new NotFoundError("Không tìm thấy affiliate");
       }
 
       const paymethod = await AffiliatePaymentMethod.findOne({
         affiliateId: affiliate._id,
       }).lean();
 
-      if (!paymethod) {
-        res.status(200).json({
-          message: "Affiliate found, but no payment method available",
+      sendSuccess(
+        res,
+        "Lấy thông tin affiliate thành công",
+        {
           affiliate,
-          paymethod: null,
-        });
-        return;
-      }
-      res.status(200).json({
-        message: "Affiliate and payment method retrieved successfully",
-        affiliate,
-        paymethod,
-      });
-      return;
-    } catch (error) {
-      console.error("Error fetching affiliate:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+          paymethod: paymethod || null,
+        },
+        200
+      );
     }
-  }
+  );
 
-  async updateAffiliate(req: Request, res: Response) {
-    try {
-      const id = req.params.id;
-      const { status } = req.body; // Chỉ lấy trường status từ req.body
+  /**
+   * Cập nhật affiliate status
+   * PUT /api/affiliates/:id
+   */
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!id) {
+        throw new BadRequestError("Affiliate ID là bắt buộc");
+      }
 
       if (!status) {
-        res.status(400).json({ message: "Trường 'status' là bắt buộc." });
-        return;
+        throw new BadRequestError("Trường 'status' là bắt buộc");
       }
+
       const affiliate = await Affiliate.findByIdAndUpdate(
         id,
-        { status: status },
-        { new: true, runValidators: true }, // new: true trả về tài liệu đã cập nhật; runValidators: true chạy các validator đã định nghĩa trong schema
+        { status },
+        { new: true, runValidators: true }
       );
 
       if (!affiliate) {
-        res.status(404).json({ message: "Không tìm thấy Affiliate." });
-        return;
+        throw new NotFoundError("Không tìm thấy affiliate");
       }
 
-      res.status(200).json({
-        message: "Cập nhật trạng thái Affiliate thành công",
-        affiliate,
-      });
-    } catch (error) {
-      console.error(
-        `[updateAffiliate] Lỗi: ${
-          error instanceof Error ? error.message : error
-        }`,
-      );
-      res
-        .status(500)
-        .json({ message: "Lỗi máy chủ nội bộ. Vui lòng thử lại sau." });
+      sendSuccess(res, "Cập nhật trạng thái affiliate thành công", affiliate, 200);
     }
-  }
+  );
 
-  async deleteAffiliate(req: Request, res: Response) {
-    if (req.method !== "DELETE") {
-      res.status(405).json({ message: "Method Not Allowed" });
-      return;
-    }
-
-    try {
+  /**
+   * Xóa affiliate
+   * DELETE /api/affiliates/:id
+   */
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
 
       if (!id || !Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid affiliate ID" });
-        return;
+        throw new BadRequestError("Affiliate ID không hợp lệ");
       }
 
       const affiliate = await Affiliate.findByIdAndDelete(id);
 
       if (!affiliate) {
-        res.status(404).json({ message: "Affiliate not found" });
-        return;
+        throw new NotFoundError("Không tìm thấy affiliate");
       }
 
-      res.status(200).json({
-        message: "Affiliate deleted successfully",
-        affiliateId: id,
-      });
-    } catch (error) {
-      console.error("Error deleting affiliate:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      sendSuccess(res, "Xóa affiliate thành công", { affiliateId: id }, 200);
     }
-  }
+  );
 }
 
-export const affiliateController = new AffiliateController();
+export default new AffiliateController();

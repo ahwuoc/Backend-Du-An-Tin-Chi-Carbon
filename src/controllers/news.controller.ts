@@ -1,110 +1,72 @@
 import type { Request, Response } from "express";
 import { NewsService } from "../services";
+import { asyncHandler } from "../middleware";
+import { sendSuccess, NotFoundError, BadRequestError, ValidationError } from "../utils";
 
 class NewsController {
-  async getAllNews(req: Request, res: Response) {
-    try {
+  public getAll = asyncHandler(
+    async (_req: Request, res: Response): Promise<void> => {
       const news = await NewsService.getAllNews();
-      res.status(200).json({ status: "success", data: news });
-    } catch (error: any) {
-      res.status(500).json({
-        status: "error",
-        message: error.message || "Lỗi server khi lấy danh sách tin tức",
-      });
+      sendSuccess(res, "Lấy danh sách tin tức thành công", news, 200);
     }
-  }
+  );
 
-  async getNewsById(req: Request, res: Response) {
-    try {
-      const news = await NewsService.getNewsById(req.params.id);
-      if (!news) {
-        res
-          .status(404)
-          .json({ status: "error", message: "Không tìm thấy tin tức" });
-        return;
-      }
-      res.status(200).json({ status: "success", data: news });
-    } catch (error: any) {
-      res.status(500).json({
-        status: "error",
-        message: error.message || "Lỗi server khi lấy chi tiết tin tức",
-      });
+  public getById = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const { id } = req.params;
+      if (!id) throw new BadRequestError("News ID là bắt buộc");
+
+      const news = await NewsService.getNewsById(id);
+      if (!news) throw new NotFoundError("Không tìm thấy tin tức");
+
+      sendSuccess(res, "Lấy tin tức thành công", news, 200);
     }
-  }
+  );
 
-  async createNews(req: Request, res: Response) {
-    try {
+  public create = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const newsData = req.body;
       const validationErrors = NewsService.validateNewsData(newsData);
-      
+
       if (validationErrors.length > 0) {
-        res
-          .status(400)
-          .json({ status: "error", message: "Dữ liệu không hợp lệ", details: validationErrors });
-        return;
+        throw new ValidationError("Dữ liệu không hợp lệ", validationErrors);
       }
 
       const savedNews = await NewsService.createNews(newsData);
-      res.status(201).json({ status: "success", data: savedNews });
-    } catch (error: any) {
-      res.status(500).json({
-        status: "error",
-        message: error.message || "Lỗi server khi tạo tin tức",
-      });
+      sendSuccess(res, "Tạo tin tức thành công", savedNews, 201);
     }
-  }
+  );
 
-  async updateNews(req: Request, res: Response) {
-    try {
+  public update = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("News ID là bắt buộc");
+
       const newsData = req.body;
       const validationErrors = NewsService.validateNewsData(newsData);
-      
+
       if (validationErrors.length > 0) {
-        res
-          .status(400)
-          .json({ status: "error", message: "Dữ liệu không hợp lệ", details: validationErrors });
-        return;
+        throw new ValidationError("Dữ liệu không hợp lệ", validationErrors);
       }
 
       const updatedNews = await NewsService.updateNews(id, newsData);
+      if (!updatedNews) throw new NotFoundError("Không tìm thấy tin tức");
 
-      if (!updatedNews) {
-        res
-          .status(404)
-          .json({ status: "error", message: "Không tìm thấy tin tức" });
-        return;
-      }
-
-      res.status(200).json({ status: "success", data: updatedNews });
-    } catch (error: any) {
-      res.status(500).json({
-        status: "error",
-        message: error.message || "Lỗi server khi cập nhật tin tức",
-      });
+      sendSuccess(res, "Cập nhật tin tức thành công", updatedNews, 200);
     }
-  }
+  );
 
-  async deleteNews(req: Request, res: Response) {
-    try {
+  public delete = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
-      const isDeleted = await NewsService.deleteNews(id);
-      
-      if (!isDeleted) {
-        res
-          .status(404)
-          .json({ status: "error", message: "Không tìm thấy tin tức" });
-        return;
-      }
+      if (!id) throw new BadRequestError("News ID là bắt buộc");
 
-      res.status(200).json({ status: "success", message: "Xóa tin tức thành công" });
-    } catch (error: any) {
-      res.status(500).json({
-        status: "error",
-        message: error.message || "Lỗi server khi xóa tin tức",
-      });
+      const isDeleted = await NewsService.deleteNews(id);
+      if (!isDeleted) throw new NotFoundError("Không tìm thấy tin tức");
+
+      sendSuccess(res, "Xóa tin tức thành công", null, 200);
     }
-  }
+  );
 }
 
 export default new NewsController();
