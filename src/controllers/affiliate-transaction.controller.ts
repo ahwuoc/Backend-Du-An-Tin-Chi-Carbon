@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
-import AffiliateTransaction from "../models/affiliate-transaction.model";
-import type { IAffiliateTransaction } from "../types/affiliate-transaction";
+import { AffiliateTransactionService } from "../services";
 import { asyncHandler } from "../middleware";
-import { sendSuccess, NotFoundError, BadRequestError } from "../utils";
+import { sendSuccess, BadRequestError } from "../utils";
 
 /**
  * Affiliate Transaction Controller
@@ -14,7 +13,7 @@ class AffiliateTransactionController {
    */
   public getAll = asyncHandler(
     async (_req: Request, res: Response): Promise<void> => {
-      const transactions = await AffiliateTransaction.find().lean();
+      const transactions = await AffiliateTransactionService.getAll();
       sendSuccess(res, "Lấy danh sách giao dịch thành công", transactions, 200);
     }
   );
@@ -26,19 +25,9 @@ class AffiliateTransactionController {
   public getById = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Affiliate ID là bắt buộc");
 
-      if (!id) {
-        throw new BadRequestError("Affiliate ID là bắt buộc");
-      }
-
-      const transaction = await AffiliateTransaction.findOne({
-        affiliateId: id,
-      }).lean();
-
-      if (!transaction) {
-        throw new NotFoundError("Không tìm thấy giao dịch");
-      }
-
+      const transaction = await AffiliateTransactionService.getByAffiliateId(id);
       sendSuccess(res, "Lấy giao dịch thành công", transaction, 200);
     }
   );
@@ -49,9 +38,7 @@ class AffiliateTransactionController {
    */
   public create = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
-      const data = req.body as Partial<IAffiliateTransaction>;
-      const newTransaction = await AffiliateTransaction.create(data);
-
+      const newTransaction = await AffiliateTransactionService.create(req.body);
       sendSuccess(res, "Tạo giao dịch thành công", newTransaction, 201);
     }
   );
@@ -63,21 +50,9 @@ class AffiliateTransactionController {
   public update = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Transaction ID là bắt buộc");
 
-      if (!id) {
-        throw new BadRequestError("Transaction ID là bắt buộc");
-      }
-
-      const updated = await AffiliateTransaction.findByIdAndUpdate(
-        id,
-        req.body,
-        { new: true, runValidators: true }
-      ).lean();
-
-      if (!updated) {
-        throw new NotFoundError("Không tìm thấy giao dịch");
-      }
-
+      const updated = await AffiliateTransactionService.update(id, req.body);
       sendSuccess(res, "Cập nhật giao dịch thành công", updated, 200);
     }
   );
@@ -89,17 +64,9 @@ class AffiliateTransactionController {
   public delete = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Transaction ID là bắt buộc");
 
-      if (!id) {
-        throw new BadRequestError("Transaction ID là bắt buộc");
-      }
-
-      const deleted = await AffiliateTransaction.findByIdAndDelete(id).lean();
-
-      if (!deleted) {
-        throw new NotFoundError("Không tìm thấy giao dịch");
-      }
-
+      const deleted = await AffiliateTransactionService.delete(id);
       sendSuccess(res, "Xóa giao dịch thành công", deleted, 200);
     }
   );

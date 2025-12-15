@@ -1,14 +1,15 @@
 import type { Request, Response } from "express";
-import mongoose from "mongoose";
-import { Project } from "../models/project.model";
-import { ProjectCarbon } from "../models/project-carbon.model";
+import { ProjectService } from "../services";
 import { asyncHandler } from "../middleware";
-import { sendSuccess, NotFoundError, BadRequestError, ValidationError } from "../utils";
+import { sendSuccess, BadRequestError } from "../utils";
 
+/**
+ * Project Controller
+ */
 class ProjectController {
   public create = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
-      const newProject = await Project.create(req.body);
+      const newProject = await ProjectService.create(req.body);
       sendSuccess(res, "Tạo project thành công", newProject, 201);
     }
   );
@@ -18,13 +19,7 @@ class ProjectController {
       const { id } = req.params;
       if (!id) throw new BadRequestError("Project ID là bắt buộc");
 
-      const updatedProject = await ProjectCarbon.findByIdAndUpdate(id, req.body, {
-        new: true,
-        runValidators: true,
-      });
-
-      if (!updatedProject) throw new NotFoundError("Không tìm thấy project");
-
+      const updatedProject = await ProjectService.update(id, req.body);
       sendSuccess(res, "Cập nhật project thành công", updatedProject, 200);
     }
   );
@@ -38,23 +33,11 @@ class ProjectController {
         throw new BadRequestError("`status` phải là kiểu chuỗi (string)");
       }
 
-      const validStatuses = ["rejected", "approved", "pending"];
-      if (!validStatuses.includes(status)) {
-        throw new ValidationError(
-          `Giá trị 'status' không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(", ")}`
-        );
-      }
-
-      const updatedProject = await Project.findOneAndUpdate(
-        { _id: projectId, "documents._id": documentId },
-        { $set: { "documents.$.status": status } },
-        { new: true }
+      const updatedProject = await ProjectService.updateDocumentsStatus(
+        projectId,
+        documentId,
+        status
       );
-
-      if (!updatedProject) {
-        throw new NotFoundError("Không tìm thấy project hoặc document");
-      }
-
       sendSuccess(res, "Cập nhật trạng thái tài liệu thành công", updatedProject, 200);
     }
   );
@@ -65,18 +48,8 @@ class ProjectController {
       const { documents } = req.body;
 
       if (!id) throw new BadRequestError("Project ID là bắt buộc");
-      if (!Array.isArray(documents)) {
-        throw new ValidationError("documents phải là một mảng");
-      }
 
-      const project = await Project.findByIdAndUpdate(
-        id,
-        { documents },
-        { new: true, runValidators: true }
-      );
-
-      if (!project) throw new NotFoundError("Không tìm thấy project");
-
+      const project = await ProjectService.updateDocuments(id, documents);
       sendSuccess(res, "Cập nhật documents thành công", project, 200);
     }
   );
@@ -87,25 +60,15 @@ class ProjectController {
       const { activities } = req.body;
 
       if (!id) throw new BadRequestError("Project ID là bắt buộc");
-      if (!Array.isArray(activities)) {
-        throw new ValidationError("activities phải là một mảng");
-      }
 
-      const project = await Project.findByIdAndUpdate(
-        id,
-        { activities },
-        { new: true, runValidators: true }
-      );
-
-      if (!project) throw new NotFoundError("Không tìm thấy project");
-
+      const project = await ProjectService.updateActivities(id, activities);
       sendSuccess(res, "Cập nhật activities thành công", project, 200);
     }
   );
 
   public getAll = asyncHandler(
     async (_req: Request, res: Response): Promise<void> => {
-      const projects = await ProjectCarbon.find().populate("userId").lean();
+      const projects = await ProjectService.getAll();
       sendSuccess(res, "Lấy danh sách project thành công", projects, 200);
     }
   );
@@ -113,14 +76,9 @@ class ProjectController {
   public getById = asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const { id } = req.params;
+      if (!id) throw new BadRequestError("Project ID là bắt buộc");
 
-      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        throw new BadRequestError("Project ID không hợp lệ");
-      }
-
-      const project = await ProjectCarbon.findById(id).populate("userId");
-      if (!project) throw new NotFoundError("Không tìm thấy project");
-
+      const project = await ProjectService.getById(id);
       sendSuccess(res, "Lấy project thành công", project, 200);
     }
   );
@@ -130,7 +88,7 @@ class ProjectController {
       const { id } = req.params;
       if (!id) throw new BadRequestError("User ID là bắt buộc");
 
-      const projects = await ProjectCarbon.find({ userId: id }).lean();
+      const projects = await ProjectService.getByUserId(id);
       sendSuccess(res, "Lấy project theo user thành công", projects, 200);
     }
   );
