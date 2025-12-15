@@ -96,3 +96,40 @@ export class UpdateProfileDTO {
   @IsString({ message: "Địa chỉ phải là string" })
   address?: string;
 }
+
+
+/**
+ * Update User DTO (Admin)
+ * Validate dữ liệu khi admin cập nhật user
+ */
+export class UpdateUserDTO {
+  @IsString({ message: "ID phải là string" })
+  _id: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: "Email không hợp lệ" })
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  email?: string;
+
+  @IsOptional()
+  @IsString({ message: "Tên phải là string" })
+  @MinLength(2, { message: "Tên phải có ít nhất 2 ký tự" })
+  @Transform(({ value }) => value?.trim())
+  name?: string;
+
+  @IsOptional()
+  @IsString({ message: "Avatar phải là string" })
+  avatar?: string;
+
+  @IsOptional()
+  @IsString({ message: "Số điện thoại phải là string" })
+  phone?: string;
+
+  @IsOptional()
+  @IsString({ message: "Địa chỉ phải là string" })
+  address?: string;
+
+  @IsOptional()
+  @IsString({ message: "Role phải là string" })
+  role?: "user" | "admin" | "editor";
+}

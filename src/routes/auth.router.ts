@@ -1,258 +1,186 @@
-import {
-  Router,
-  type Request,
-  type Response,
-  type NextFunction,
-  type RequestHandler,
-  type ErrorRequestHandler,
-} from "express";
+import { Router } from "express";
 import AuthController from "../controllers/auth.controller";
 import rateLimit from "express-rate-limit";
-import {
-  query,
-  body,
-  validationResult,
-  type ValidationChain,
-} from "express-validator";
-import { authenticate } from "../middleware/authMiddleware";
+import { authenticate, hasRole } from "../middleware/authMiddleware";
 import { validateRequest } from "../middleware/validateRequest";
-import { ChangePasswordDTO, ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "../dto/auth.dto";
-interface RequestAuthentication extends Request {
-  user?: { id: string; email: string; role: string };
-}
+import {
+  RegisterDTO,
+  LoginDTO,
+  ChangePasswordDTO,
+  ForgotPasswordDTO,
+  ResetPasswordDTO,
+  UpdateUserDTO,
+} from "../dto/auth.dto";
 
+const router = Router();
 const authController = new AuthController();
-const handleValidationErrors = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void => {
-  // Thêm kiểu trả về : void
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(422).json({
-      // Gửi response
-      success: false,
-      message: "Dữ liệu đầu vào không hợp lệ.",
-      errors: errors.array(),
-    });
-    return; // Kết thúc hàm sau khi gửi response
-  }
-  next(); // Gọi middleware tiếp theo
-};
 
-const validateRegistration: (ValidationChain | RequestHandler)[] = [
-  body("name").notEmpty().withMessage("Thiếu tên người dùng."),
-  body("email")
-    .notEmpty()
-    .withMessage("Thiếu email.")
-    .isEmail()
-    .withMessage("Email không hợp lệ."),
-  body("password")
-    .notEmpty()
-    .withMessage("Thiếu mật khẩu.")
-    .isLength({ min: 6 })
-    .withMessage("Mật khẩu phải có ít nhất 6 ký tự."),
-  handleValidationErrors,
-];
-
-const validateLogin: (ValidationChain | RequestHandler)[] = [
-  body("email")
-    .notEmpty()
-    .withMessage("Thiếu email.")
-    .isEmail()
-    .withMessage("Email không hợp lệ."),
-  body("password").notEmpty().withMessage("Thiếu mật khẩu."),
-  handleValidationErrors,
-];
-
-const validateForgotPassword: (ValidationChain | RequestHandler)[] = [
-  body("email")
-    .notEmpty()
-    .withMessage("Thiếu email.")
-    .isEmail()
-    .withMessage("Email không hợp lệ."),
-  handleValidationErrors,
-];
-
-const validateResetPassword: (ValidationChain | RequestHandler)[] = [
-  query("token")
-    .notEmpty()
-    .withMessage("Thiếu token.")
-    .isJWT()
-    .withMessage("Token không phải là JWT hợp lệ."),
-  body("newPassword")
-    .notEmpty()
-    .withMessage("Thiếu mật khẩu mới.")
-    .isLength({ min: 6 })
-    .withMessage("Mật khẩu mới phải có ít nhất 6 ký tự."),
-  handleValidationErrors,
-];
-
-const validateChangePassword: (ValidationChain | RequestHandler)[] = [
-  body("oldPassword").notEmpty().withMessage("Thiếu mật khẩu cũ."),
-  body("newPassword")
-    .notEmpty()
-    .withMessage("Thiếu mật khẩu mới.")
-    .isLength({ min: 6 })
-    .withMessage("Mật khẩu mới phải có ít nhất 6 ký tự.")
-    .custom((value, { req }) => {
-      if (value === req.body.oldPassword) {
-        throw new Error("Mật khẩu mới phải khác mật khẩu cũ.");
-      }
-      return true;
-    }),
-  handleValidationErrors,
-];
-
-const validateUpdateUser: (ValidationChain | RequestHandler)[] = [
-  body("_id")
-    .notEmpty()
-    .withMessage("Thiếu ID người dùng.")
-    .isMongoId()
-    .withMessage("ID người dùng không hợp lệ."),
-  body("email").optional().isEmail().withMessage("Email không hợp lệ."),
-  body("name").optional().notEmpty().withMessage("Tên không được để trống."),
-  body("role")
-    .optional()
-    .isIn(["user", "admin", "editor"])
-    .withMessage("Vai trò không hợp lệ."),
-  handleValidationErrors,
-];
-
-const limitRequest = (
+/**
+ * Rate Limiter Factory
+ */
+const createRateLimiter = (
   message: string,
   windowMs: number = 15 * 60 * 1000,
-  maxRequests: number = 5,
-): RequestHandler => {
+  max: number = 5
+) => {
   return rateLimit({
     windowMs,
-    max: maxRequests,
+    max,
     message: { success: false, message },
     standardHeaders: true,
     legacyHeaders: false,
   });
 };
 
-const rateLimitMessages = {
+// Rate limit messages
+const RATE_LIMIT = {
   login: "Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 15 phút.",
-  register:
-    "Quá nhiều tài khoản được tạo từ IP này. Vui lòng thử lại sau 1 giờ.",
-  forgotPassword:
-    "Quá nhiều yêu cầu đặt lại mật khẩu. Vui lòng thử lại sau 1 giờ.",
-  generic: "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
+  forgotPassword: "Quá nhiều yêu cầu đặt lại mật khẩu. Vui lòng thử lại sau 1 giờ.",
 };
 
-const router = Router();
+// ==================== PUBLIC ROUTES ====================
 
-router.post("/register",
+/**
+ * @route   POST /api/auth/register
+ * @desc    Đăng ký tài khoản mới
+ * @access  Public
+ */
+router.post(
+  "/register",
   validateRequest(RegisterDTO),
-  (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next)
+  authController.register
 );
+
+/**
+ * @route   POST /api/auth/login
+ * @desc    Đăng nhập
+ * @access  Public
+ */
 router.post(
   "/login",
-  limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
+  createRateLimiter(RATE_LIMIT.login, 15 * 60 * 1000, 100),
   validateRequest(LoginDTO),
-  (req: Request, res: Response, next: NextFunction) => authController.login(req, res, next),
+  authController.login
 );
 
-
+/**
+ * @route   GET /api/auth/login/email/:access_token
+ * @desc    Xác thực email qua token
+ * @access  Public
+ */
 router.get(
   "/login/email/:access_token",
-  (req: Request, res: Response, next: NextFunction) => authController.LoginEmailAuth(req, res, next),
+  authController.LoginEmailAuth
 );
 
-router.post(
-  "/logout",
-  (req: Request, res: Response, next: NextFunction) => authController.authenticate(req, res, next),
-  (req: Request, res: Response, next: NextFunction) => authController.logout(req, res, next),
-);
-
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Gửi email đặt lại mật khẩu
+ * @access  Public
+ */
 router.post(
   "/forgot-password",
-  limitRequest(rateLimitMessages.forgotPassword, 60 * 60 * 1000, 5),
+  createRateLimiter(RATE_LIMIT.forgotPassword, 60 * 60 * 1000, 5),
   validateRequest(ForgotPasswordDTO),
-  (req: Request, res: Response, next: NextFunction) => authController.forgotPassword(req, res, next),
+  authController.forgotPassword
 );
 
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Đặt lại mật khẩu
+ * @access  Public
+ */
 router.post(
   "/reset-password",
   validateRequest(ResetPasswordDTO),
-  (req: Request, res: Response, next: NextFunction) => authController.resetPassword(req, res, next),
+  authController.resetPassword
 );
+
+// ==================== PROTECTED ROUTES ====================
+
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Đăng xuất
+ * @access  Private
+ */
 router.post(
-  "/change-password",
-  authController.authenticate.bind(authController),
-  validateRequest(ChangePasswordDTO),
-  (req: RequestAuthentication, res: Response, next: NextFunction) => authController.changePassword(req as any, res, next),
+  "/logout",
+  authenticate,
+  authController.logout
 );
+
+/**
+ * @route   GET /api/auth/users/me
+ * @desc    Lấy thông tin user hiện tại
+ * @access  Private
+ */
 router.get(
   "/users/me",
-  authController.authenticate.bind(authController),
-  (req: RequestAuthentication, res: Response): void => {
-    if (req.user) {
-      res.status(200).json({ success: true, user: req.user });
-      return; // Kết thúc hàm
-    }
-    res.status(404).json({
-      success: false,
-      message: "Không tìm thấy thông tin người dùng.",
-    });
-  },
+  authenticate,
+  authController.getProfile
 );
 
+/**
+ * @route   POST /api/auth/change-password
+ * @desc    Đổi mật khẩu
+ * @access  Private
+ */
+router.post(
+  "/change-password",
+  authenticate,
+  validateRequest(ChangePasswordDTO),
+  authController.changePassword
+);
+
+// ==================== ADMIN ROUTES ====================
+
+/**
+ * @route   GET /api/auth/users
+ * @desc    Lấy danh sách tất cả users
+ * @access  Admin
+ */
+router.get(
+  "/users",
+  authenticate,
+  hasRole(["admin"]),
+  authController.getAllUser
+);
+
+/**
+ * @route   PUT /api/auth/users/update
+ * @desc    Cập nhật thông tin user (admin)
+ * @access  Admin
+ */
 router.put(
   "/users/update",
-  authController.authenticate.bind(authController),
-  validateUpdateUser,
-  authController.changeUser.bind(authController),
+  authenticate,
+  hasRole(["admin"]),
+  validateRequest(UpdateUserDTO),
+  authController.changeUser
 );
-const requireAdmin: RequestHandler = (
-  req: RequestAuthentication,
-  res: Response,
-  next: NextFunction,
-): void => {
-  if (req.user && req.user.role === "admin") {
-    next();
-    return;
-  }
-  res.status(403).json({
-    success: false,
-    message: "Không có quyền truy cập. Yêu cầu quyền quản trị viên.",
-  });
-};
 
-router.get("/users", authController.getAllUser.bind(authController));
-router.delete("/:id", authController.deleteUserById.bind(authController));
+/**
+ * @route   DELETE /api/auth/:id
+ * @desc    Xóa user
+ * @access  Admin
+ */
+router.delete(
+  "/:id",
+  authenticate,
+  hasRole(["admin"]),
+  authController.deleteUserById
+);
 
+/**
+ * @route   GET /api/auth/user/infor-manger/:id
+ * @desc    Lấy thông tin manager
+ * @access  Admin
+ */
 router.get(
   "/user/infor-manger/:id",
-  authController.getManagerInfor.bind(authController),
+  authenticate,
+  hasRole(["admin", "manager"]),
+  authController.getManagerInfor
 );
-const globalErrorHandler: ErrorRequestHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void => {
-  console.error("🚨 GLOBAL ERROR HANDLER CAUGHT:", err.stack || err);
-  if (res.headersSent) {
-    return next(err);
-  }
-  if (err.status) {
-    res.status(err.status).json({ success: false, message: err.message });
-    return;
-  }
-  if (err.name === "UnauthorizedError") {
-    res
-      .status(401)
-      .json({ success: false, message: "Token không hợp lệ hoặc đã hết hạn." });
-    return;
-  }
-  res.status(500).json({
-    success: false,
-    message: "Lỗi máy chủ nội bộ. Chúng tôi đang cố gắng khắc phục!",
-  });
-};
-router.use(globalErrorHandler);
+
 export default router;
