@@ -28,6 +28,7 @@ import creditCarbonRouter from "./routes/credit-carbon.router";
 import carbonProductRouter from "./routes/carbon-product.router";
 import donateTreeRouter from "./routes/donate-tree.router";
 import { notFoundHandler } from "./routes/notfound.router";
+import { errorHandle } from "./middleware/errorHandler";
 
 // Environment variables
 const PORT = process.env.PORT || 3000;
@@ -100,10 +101,7 @@ app.use("/api/transactions", affiliateTransactionRouter);
 app.use("/api/certificates", certificateRouter);
 app.use("/api/carboncredits", creditCarbonRouter);
 app.use("/api/news", newsRouter);
-
-// 404 handler
-app.use(notFoundHandler);
-
+app.use(errorHandle);
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: any) => {
   console.error("Global error handler:", err);

@@ -1,4 +1,4 @@
-export const HttpStatus = {
+export const c = {
   OK: 200,
   CREATED: 201,
   NO_CONTENT: 204,
