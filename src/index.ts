@@ -2,9 +2,11 @@ import express, { type Request, type Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import swaggerUi from 'swagger-ui-express';
+import { config , validateConfig } from "./config/env";
 
 // Load environment variables
 dotenv.config();
+
 
 // Database connection
 import connectDB from "./config/db";
@@ -27,16 +29,17 @@ import certificateRouter from "./routes/certificate.router";
 import creditCarbonRouter from "./routes/credit-carbon.router";
 import carbonProductRouter from "./routes/carbon-product.router";
 import donateTreeRouter from "./routes/donate-tree.router";
-import { notFoundHandler } from "./routes/notfound.router";
 import { errorHandle } from "./middleware/errorHandler";
 
+
+validateConfig();
 // Environment variables
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || "development";
+const PORT = config.PORT;
+const NODE_ENV = config.NODE_ENV;
 
 // CORS configuration - Allow all origins
 const corsOptions = {
-  origin: true, // Allow all origins
+  origin: config.CORS_ORIGIN, 
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -102,23 +105,11 @@ app.use("/api/certificates", certificateRouter);
 app.use("/api/carboncredits", creditCarbonRouter);
 app.use("/api/news", newsRouter);
 app.use(errorHandle);
-// Global error handler
-app.use((err: Error, req: Request, res: Response, next: any) => {
-  console.error("Global error handler:", err);
-  res.status(500).json({
-    success: false,
-    message: NODE_ENV === "production" ? "Internal server error" : err.message,
-  });
-});
-
-// Start server
 const startServer = async () => {
   try {
-    // Connect to database
     await connectDB();
     console.log("Database connected successfully");
 
-    // Start listening
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
       console.log(`Environment: ${NODE_ENV}`);
@@ -129,18 +120,4 @@ const startServer = async () => {
     process.exit(1);
   }
 };
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err: Error) => {
-  console.error("Unhandled Promise Rejection:", err);
-  process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err: Error) => {
-  console.error("Uncaught Exception:", err);
-  process.exit(1);
-});
-
-// Start the server
 startServer();
