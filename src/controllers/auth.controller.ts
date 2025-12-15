@@ -1,14 +1,13 @@
 import type { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services";
-import { AuthenticatedRequest } from "../middleware/authMiddleware";
-import { sendSuccess } from "../utils/response";
+import { AuthenticatedRequest, asyncHandler } from "../middleware";
 import {
+  sendSuccess,
   BadRequestError,
   ConflictError,
   NotFoundError,
   UnauthorizedError,
-} from "../utils/error";
-import { asyncHandler } from "../middleware/errorHandler";
+} from "../utils";
 
 export default class AuthController {
   /**
