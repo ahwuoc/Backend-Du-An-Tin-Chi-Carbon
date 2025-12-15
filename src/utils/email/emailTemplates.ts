@@ -74,7 +74,6 @@ const formatCurrency = (amount: number): string => {
 };
 // utils/emailTemplates.ts (hoặc services/emailService.ts)
 
-// Hàm này dùng để gửi xác nhận cho khách hàng khi họ vừa gửi yêu cầu tư vấn
 export const sendMailConsultationConfirmation = (consultationData: {
   name: string;
   email: string;
@@ -85,9 +84,6 @@ export const sendMailConsultationConfirmation = (consultationData: {
   projectSize: string;
   message: string;
   status: string;
-  // Các trường khác từ form đăng ký ban đầu nếu bạn muốn đưa vào email xác nhận
-  // Ví dụ: age, location, area, position, experience, education,
-  // projectLocation, implementationTimeline, budget, carbonGoals, etc.
 }) => {
   const consultationTypeMap: Record<string, string> = {
     forest: "Trồng rừng",

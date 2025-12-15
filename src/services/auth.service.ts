@@ -1,14 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import validator from "validator";
 import { sendEmail } from "../utils/email/sendEmail";
 import { resetPasswordContent } from "../utils/email/emailTemplates";
 import { UserModel } from "../models/users.model";
-import { Product } from "../models/products.model";
-import { ProjectMember } from "../models/project-member.router";
-import { Project } from "../models/project.model";
 import Order from "../models/order.model";
-import AffiliateModel from "../models/affiliate.model";
 import { ProjectCarbon } from "../models/project-carbon.model";
 import { RegisterForm, LoginForm } from "../validate";
 import { validateFlow } from "../fsm/base-fsm";
