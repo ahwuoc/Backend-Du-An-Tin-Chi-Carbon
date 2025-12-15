@@ -40,13 +40,11 @@ export class NotFoundError extends AppError {
         super(message, 404, errorCode || "NOT_FOUND")
     }
 }
-// Handle case 409 conflict 
-
-export class ConflicError extends AppError{
-    constructor(message:string="Dữ liệu đã tồn tại",errorCode?:string){
-          super(message,409,errorCode)
-
-    }
+// Handle case 409 Conflict
+export class ConflictError extends AppError {
+  constructor(message: string = "Dữ liệu đã tồn tại", errorCode?: string) {
+    super(message, 409, errorCode || "CONFLICT");
+  }
 }
 
 // Handle case 422 : Validation error
