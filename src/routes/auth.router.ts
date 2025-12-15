@@ -15,7 +15,8 @@ import {
   type ValidationChain,
 } from "express-validator";
 import { authenticate } from "../middleware/authMiddleware";
-
+import { validateRequest } from "../middleware/validateRequest";
+import { ChangePasswordDTO, ForgotPasswordDTO, LoginDTO, RegisterDTO, ResetPasswordDTO } from "../dto/auth.dto";
 interface RequestAuthentication extends Request {
   user?: { id: string; email: string; role: string };
 }
@@ -144,14 +145,17 @@ const rateLimitMessages = {
 
 const router = Router();
 
-router.post("/register", validateRegistration, (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next));
-
+router.post("/register",
+  validateRequest(RegisterDTO),
+  (req: Request, res: Response, next: NextFunction) => authController.register(req, res, next)
+);
 router.post(
   "/login",
   limitRequest(rateLimitMessages.login, 15 * 60 * 1000, 100),
-  validateLogin,
+  validateRequest(LoginDTO),
   (req: Request, res: Response, next: NextFunction) => authController.login(req, res, next),
 );
+
 
 router.get(
   "/login/email/:access_token",
@@ -167,20 +171,19 @@ router.post(
 router.post(
   "/forgot-password",
   limitRequest(rateLimitMessages.forgotPassword, 60 * 60 * 1000, 5),
-  validateForgotPassword,
+  validateRequest(ForgotPasswordDTO),
   (req: Request, res: Response, next: NextFunction) => authController.forgotPassword(req, res, next),
 );
 
 router.post(
   "/reset-password",
-  validateResetPassword,
+  validateRequest(ResetPasswordDTO),
   (req: Request, res: Response, next: NextFunction) => authController.resetPassword(req, res, next),
 );
-
 router.post(
   "/change-password",
-  (req: Request, res: Response, next: NextFunction) => authController.authenticate(req, res, next),
-  validateChangePassword,
+  authController.authenticate.bind(authController),
+  validateRequest(ChangePasswordDTO),
   (req: RequestAuthentication, res: Response, next: NextFunction) => authController.changePassword(req as any, res, next),
 );
 router.get(
@@ -195,7 +198,6 @@ router.get(
       success: false,
       message: "Không tìm thấy thông tin người dùng.",
     });
-    // return; // Có thể thêm return ở đây hoặc để hàm tự kết thúc
   },
 );
 
@@ -210,7 +212,6 @@ const requireAdmin: RequestHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  // Thêm kiểu trả về : void (hoặc để TypeScript tự suy luận nếu thân hàm đúng)
   if (req.user && req.user.role === "admin") {
     next();
     return;
