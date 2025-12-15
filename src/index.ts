@@ -1,81 +1,75 @@
-import express, { type Request, type Response } from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import swaggerUi from 'swagger-ui-express';
-import { config , validateConfig } from "./config/env";
+import swaggerUi from "swagger-ui-express";
 
-// Load environment variables
+// Load environment variables first
 dotenv.config();
 
-
-// Database connection
+// Config
+import { config, validateConfig } from "./config/env";
 import connectDB, { disconnectDB } from "./config/db";
-
-// Swagger documentation
 import { specs } from "./config/swagger";
 
-// Import routes
-import authRouter from "./routes/auth.router";
-import consultationRouter from "./routes/consultation.router";
-import orderRouter from "./routes/order.router";
-import productRouter from "./routes/products.router";
-import newsRouter from "./routes/news.router";
-import projectRouter from "./routes/project.router";
-import affiliateRouter from "./routes/affiliate.router";
-import projectCarbonRouter from "./routes/project-carbon.router";
-import affiliatePaymethodRouter from "./routes/affiliate-paymethod.router";
-import affiliateTransactionRouter from "./routes/affiliate-transaction.router";
-import certificateRouter from "./routes/certificate.router";
-import creditCarbonRouter from "./routes/credit-carbon.router";
-import carbonProductRouter from "./routes/carbon-product.router";
-import donateTreeRouter from "./routes/donate-tree.router";
-import { errorHandle } from "./middleware/errorHandler";
+// Middleware
+import { errorHandle } from "./middleware";
 
+// Routes - Clean imports from barrel
+import {
+  authRouter,
+  consultationRouter,
+  orderRouter,
+  productRouter,
+  newsRouter,
+  projectRouter,
+  affiliateRouter,
+  projectCarbonRouter,
+  affiliatePaymethodRouter,
+  affiliateTransactionRouter,
+  certificateRouter,
+  creditCarbonRouter,
+  carbonProductRouter,
+  donateTreeRouter,
+  notFoundHandler,
+} from "./routes";
 
+// Validate environment variables
 validateConfig();
+
 // Environment variables
 const PORT = config.PORT;
 const NODE_ENV = config.NODE_ENV;
 
-// CORS configuration - Allow all origins
+// CORS configuration
 const corsOptions = {
-  origin: config.CORS_ORIGIN, 
+  origin: config.CORS_ORIGIN,
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
 };
 
+// Initialize Express app
 const app = express();
 
-// Middleware
+// ==================== MIDDLEWARE ====================
+
+// Body parser
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Trust proxy
 app.set("trust proxy", 1);
 
-// CORS middleware
+// CORS
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// ==================== ROUTES ====================
 
-// Add headers middleware
-app.use((req: Request, res: Response, next: any) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
-// Health check endpoint
-app.get("/", (req: Request, res: Response) => {
+// Health check
+app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
     message: "Tin Chi Carbon API is running",
     environment: NODE_ENV,
@@ -84,10 +78,14 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Tin Chi Carbon API Documentation'
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Tin Chi Carbon API Documentation",
+  })
+);
 
 // API routes
 app.use("/api/auth", authRouter);
@@ -104,44 +102,47 @@ app.use("/api/transactions", affiliateTransactionRouter);
 app.use("/api/certificates", certificateRouter);
 app.use("/api/carboncredits", creditCarbonRouter);
 app.use("/api/news", newsRouter);
+
+// 404 handler
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
 app.use(errorHandle);
+
+// ==================== SERVER ====================
+
 const startServer = async () => {
   try {
     await connectDB();
-    console.log("Database connected successfully");
 
     app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log(`Environment: ${NODE_ENV}`);
-      console.log(`Started at: ${new Date().toISOString()}`);
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`📝 Environment: ${NODE_ENV}`);
+      console.log(`📚 API Docs: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("❌ Failed to start server:", error);
     process.exit(1);
   }
 };
-// Graceful shutdown handlers
+
+// ==================== GRACEFUL SHUTDOWN ====================
+
 const gracefulShutdown = async (signal: string) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
-
-  // Close database connection
   await disconnectDB();
-
   console.log("✅ Graceful shutdown completed");
   process.exit(0);
 };
 
-// Handle shutdown signals
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-// Handle unhandled promise rejections
 process.on("unhandledRejection", (err: Error) => {
   console.error("❌ Unhandled Promise Rejection:", err);
   gracefulShutdown("unhandledRejection");
 });
 
-// Handle uncaught exceptions
 process.on("uncaughtException", (err: Error) => {
   console.error("❌ Uncaught Exception:", err);
   gracefulShutdown("uncaughtException");
