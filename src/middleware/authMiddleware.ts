@@ -1,12 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { config } from "../config/env";
 
-const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET environment variable is missing.");
-  process.exit(1);
-}
+const JWT_SECRET = config.JWT_SECRET;
 
 export interface AuthenticatedRequest extends Request {
   user: {
