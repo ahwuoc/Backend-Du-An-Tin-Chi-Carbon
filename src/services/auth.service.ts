@@ -2,145 +2,209 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/email/sendEmail";
 import { resetPasswordContent } from "../utils/email/emailTemplates";
-import { UserModel } from "../models/users.model";
+import { UserModel, IUser } from "../models/users.model";
 import Order from "../models/order.model";
 import { ProjectCarbon } from "../models/project-carbon.model";
-import { RegisterForm, LoginForm } from "../validate";
-import { validateFlow } from "../fsm/base-fsm";
-
-
 import { config } from "../config/env";
 
-const JWT_SECRET = config.JWT_SECRET;
-const JWT_EXPIRES_IN = config.JWT_EXPIRES_IN;
-export interface IUser {
+// ==================== TYPES ====================
+
+/**
+ * JWT Payload interface
+ */
+export interface IJwtPayload {
   id: string;
   email: string;
   role: string;
 }
 
-import type { FieldError } from "../fsm/base-fsm";
-
-export interface IAuthService {
-  createToken(payload: object, expiresIn?: string): string;
-  hashPassword(password: string): Promise<string>;
-  comparePassword(password: string, hashedPassword: string): Promise<boolean>;
-  validateUserExistence(email: string): Promise<boolean>;
-  createUser(userData: any): Promise<any>;
-  findUserById(id: string): Promise<any>;
-  findUserByEmail(email: string): Promise<any>;
-  updateUser(id: string, updateData: any): Promise<any>;
-  deleteUser(id: string): Promise<any>;
-  getAllUsers(): Promise<any[]>;
-  getManagerInfo(userId: string): Promise<{ orders: any[]; projects: any[] }>;
-  verifyToken(token: string): IUser;
-  validateRegistration(data: any): Promise<FieldError[]>;
-  validateLogin(data: any): Promise<FieldError[]>;
-  sendResetPasswordEmail(email: string, resetToken: string): Promise<void>;
-  generateResetToken(): string;
+/**
+ * User Document with _id
+ */
+export interface IUserDocument extends IUser {
+  _id: any; // MongoDB ObjectId
 }
 
-export class AuthService implements IAuthService {
-  private userModel = UserModel;
+/**
+ * Create User Input
+ */
+export interface ICreateUserInput {
+  email: string;
+  password: string;
+  name: string;
+  role?: "user" | "admin" | "editor";
+}
 
-  public createToken(
-    payload: object,
-    expiresIn: string = JWT_EXPIRES_IN,
-  ): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
+/**
+ * Update User Input
+ */
+export interface IUpdateUserInput {
+  name?: string;
+  email?: string;
+  avatar?: string;
+  phone?: string;
+  address?: string;
+  role?: "user" | "admin" | "editor";
+  password?: string;
+}
+
+/**
+ * Manager Info Response
+ */
+export interface IManagerInfo {
+  orders: any[];
+  projects: any[];
+}
+
+// ==================== SERVICE ====================
+
+export class AuthService {
+  private readonly SALT_ROUNDS = 10;
+
+  /**
+   * Tạo JWT token
+   * @param payload - Data để encode vào token
+   * @param expiresIn - Thời gian hết hạn (default từ config)
+   */
+  public createToken(payload: IJwtPayload, expiresIn?: string): string {
+    return jwt.sign(payload, config.JWT_SECRET, {
+      expiresIn: expiresIn || config.JWT_EXPIRES_IN,
+    } as jwt.SignOptions);
   }
 
+  /**
+   * Verify JWT token
+   * @param token - JWT token cần verify
+   * @returns Decoded payload
+   */
+  public verifyToken(token: string): IJwtPayload {
+    return jwt.verify(token, config.JWT_SECRET) as IJwtPayload;
+  }
+
+  /**
+   * Hash password
+   * @param password - Plain text password
+   */
   public async hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, 10);
+    return bcrypt.hash(password, this.SALT_ROUNDS);
   }
 
+  /**
+   * So sánh password
+   * @param password - Plain text password
+   * @param hashedPassword - Hashed password từ database
+   */
   public async comparePassword(
     password: string,
-    hashedPassword: string,
+    hashedPassword: string
   ): Promise<boolean> {
-    return await bcrypt.compare(password, hashedPassword);
+    return bcrypt.compare(password, hashedPassword);
   }
 
-  public async validateUserExistence(email: string): Promise<boolean> {
-    const existingUser = await this.userModel.findOne({ email });
-    return !!existingUser;
+  /**
+   * Tạo user mới
+   * @param userData - Dữ liệu user
+   */
+  public async createUser(userData: ICreateUserInput): Promise<IUserDocument> {
+    const user = await UserModel.create(userData);
+    return user.toObject() as IUserDocument;
   }
 
-  public async createUser(userData: any): Promise<any> {
-    return await this.userModel.create(userData);
+  /**
+   * Tìm user theo ID
+   * @param id - User ID
+   */
+  public async findUserById(id: string): Promise<IUserDocument | null> {
+    const user = await UserModel.findById(id).select("-password").lean();
+    return user as IUserDocument | null;
   }
 
-  public async findUserById(id: string): Promise<any> {
-    return await this.userModel.findById(id).select("-password");
+  /**
+   * Tìm user theo email (bao gồm password để verify)
+   * @param email - User email
+   */
+  public async findUserByEmail(email: string): Promise<IUserDocument | null> {
+    const user = await UserModel.findOne({ email }).select("+password").lean();
+    return user as IUserDocument | null;
   }
 
-  public async findUserByEmail(email: string): Promise<any> {
-    return await this.userModel.findOne({ email }).select("+password");
+  /**
+   * Kiểm tra email đã tồn tại chưa
+   * @param email - Email cần kiểm tra
+   */
+  public async isEmailExists(email: string): Promise<boolean> {
+    const user = await UserModel.findOne({ email }).lean();
+    return !!user;
   }
 
-  public async updateUser(id: string, updateData: any): Promise<any> {
-    return await this.userModel
-      .findByIdAndUpdate(id, updateData, {
-        new: true,
-        runValidators: true,
-      })
-      .select("-password");
+  /**
+   * Cập nhật user
+   * @param id - User ID
+   * @param updateData - Dữ liệu cần update
+   */
+  public async updateUser(
+    id: string,
+    updateData: IUpdateUserInput
+  ): Promise<IUserDocument | null> {
+    const user = await UserModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
+      .select("-password")
+      .lean();
+    return user as IUserDocument | null;
   }
 
-  public async deleteUser(id: string): Promise<any> {
-    return await this.userModel.findByIdAndDelete(id);
+  /**
+   * Xóa user
+   * @param id - User ID
+   */
+  public async deleteUser(id: string): Promise<IUserDocument | null> {
+    const user = await UserModel.findByIdAndDelete(id).lean();
+    return user as IUserDocument | null;
   }
 
-  public async getAllUsers(): Promise<any[]> {
-    return await this.userModel.find().select("-password").lean();
+  /**
+   * Lấy tất cả users
+   */
+  public async getAllUsers(): Promise<IUserDocument[]> {
+    const users = await UserModel.find().select("-password").lean();
+    return users as IUserDocument[];
   }
 
-  public async getManagerInfo(userId: string): Promise<{
-    orders: any[];
-    projects: any[];
-  }> {
-    const orders = await Order.find({ userId }).populate("productId");
-    const projects = await ProjectCarbon.find({ userId });
+  /**
+   * Lấy thông tin manager (orders + projects)
+   * @param userId - User ID
+   */
+  public async getManagerInfo(userId: string): Promise<IManagerInfo> {
+    const [orders, projects] = await Promise.all([
+      Order.find({ userId }).populate("productId").lean(),
+      ProjectCarbon.find({ userId }).lean(),
+    ]);
     return { orders, projects };
   }
 
-  public verifyToken(token: string): IUser {
-    const decoded = jwt.verify(token, JWT_SECRET) as IUser;
-    return decoded;
-  }
-
-  public async validateRegistration(data: any): Promise<FieldError[]> {
-    return await validateFlow(data, RegisterForm);
-  }
-
-  public async validateLogin(data: any): Promise<FieldError[]> {
-    return await validateFlow(data, LoginForm);
-  }
-
+  /**
+   * Gửi email reset password
+   * @param email - Email người nhận
+   * @param resetToken - Token reset password
+   */
   public async sendResetPasswordEmail(
     email: string,
-    resetToken: string,
+    resetToken: string
   ): Promise<void> {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${resetToken}`;
     const emailContent = resetPasswordContent(resetUrl);
-    await sendEmail(email, "Reset Password", emailContent);
+    await sendEmail(email, "Đặt lại mật khẩu", emailContent);
   }
 
+  /**
+   * Tạo reset password token
+   */
   public generateResetToken(): string {
-    return jwt.sign({}, JWT_SECRET, { expiresIn: "1h" });
-  }
-
-  public async handleUserExistenceAndPasswordHashing(
-    email: string,
-    password: string,
-  ): Promise<string> {
-    const existingUser = await this.userModel.findOne({ email });
-    if (existingUser) {
-      throw new Error("Người dùng đã tồn tại với email này.");
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return hashedPassword;
+    return jwt.sign({}, config.JWT_SECRET, { expiresIn: "1h" });
   }
 }
 
+// Export singleton instance
 export default new AuthService();
