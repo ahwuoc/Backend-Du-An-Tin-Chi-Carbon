@@ -118,7 +118,7 @@ export default class AuthController {
       const token = AuthService.createToken({
         id: newUser._id,
         email: newUser.email,
-        role: newUser.role,
+        role: newUser.role || "user",
       });
 
       // Set cookie
@@ -175,7 +175,7 @@ export default class AuthController {
       const token = AuthService.createToken({
         id: user._id,
         email: user.email,
-        role: user.role,
+        role: user.role || "user",
       });
 
       // Set cookie
@@ -375,7 +375,7 @@ export default class AuthController {
       (req as AuthenticatedRequest).user = {
         id: user._id,
         email: user.email,
-        role: user.role,
+        role: user.role || "user",
       };
 
       next();
