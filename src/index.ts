@@ -9,7 +9,7 @@ dotenv.config();
 
 
 // Database connection
-import connectDB from "./config/db";
+import connectDB, { disconnectDB } from "./config/db";
 
 // Swagger documentation
 import { specs } from "./config/swagger";
@@ -120,4 +120,32 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+// Graceful shutdown handlers
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+
+  // Close database connection
+  await disconnectDB();
+
+  console.log("✅ Graceful shutdown completed");
+  process.exit(0);
+};
+
+// Handle shutdown signals
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err: Error) => {
+  console.error("❌ Unhandled Promise Rejection:", err);
+  gracefulShutdown("unhandledRejection");
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err: Error) => {
+  console.error("❌ Uncaught Exception:", err);
+  gracefulShutdown("uncaughtException");
+});
+
+// Start the server
 startServer();
